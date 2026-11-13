@@ -1,6 +1,6 @@
 // S33 - Ecliptic · service worker
 // Bump CACHE at every release, or the installed app keeps the old version.
-const CACHE = 'ecliptic-v1';
+const CACHE = 'ecliptic-v2';
 const CORE = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {

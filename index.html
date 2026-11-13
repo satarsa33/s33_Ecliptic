@@ -19,7 +19,10 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
   button,select,input{font:inherit;color:var(--text)}
-  .wrap{max-width:1500px;margin:0 auto;padding:18px 28px 22px;display:flex;flex-direction:column;gap:16px}
+  .size{display:flex;align-items:center;gap:4px}
+  .size button{width:26px;height:22px;border-radius:4px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:11px;cursor:pointer}
+  .size button.on{border-color:var(--accent);color:var(--accent)}
+  .wrap{max-width:none;margin:0;padding:18px 28px 22px;display:flex;flex-direction:column;gap:16px}
   .h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:13px;letter-spacing:.22em;font-weight:400;color:var(--muted)}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 18px}
   .hint{font-size:11px;color:var(--muted)}
@@ -186,6 +189,7 @@
     <div class="stats">
       <span>OUT <b id="meter">−∞ dB</b></span>
       <span>Next chord <b id="nextc">–</b></span>
+      <span class="size" role="group" aria-label="Interface size">SIZE <button type="button" id="zMinus" aria-label="Smaller">−</button><button type="button" id="zAuto" class="on" aria-label="Fit the window">auto</button><button type="button" id="zPlus" aria-label="Larger">+</button></span>
       <span>Mother Board: off</span>
     </div>
   </footer>
@@ -1241,7 +1245,7 @@ function recordLevels() {
   lastBin = bin;
 }
 function drawArc() {
-  const c = $('arc'), dpr = window.devicePixelRatio || 1;
+  const c = $('arc'), dpr = (window.devicePixelRatio || 1) * uiZoom;
   const W = c.clientWidth, Hc = c.clientHeight;
   if (c.width !== Math.round(W * dpr) || c.height !== Math.round(Hc * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(Hc * dpr); }
   const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, Hc);
@@ -1349,6 +1353,23 @@ function frame(now) {
   drawArc();
   requestAnimationFrame(frame);
 }
+// ---------- fit the whole window: scale the interface with the window size
+let uiZoom = 1, zoomMode = 'auto', zoomManual = 1;
+try { const z = JSON.parse(localStorage.getItem('s33-ecliptic-zoom') || 'null'); if (z) { zoomMode = z.mode; zoomManual = z.value; } } catch (e) {}
+function fitWindow() {
+  const auto = clamp(Math.min(window.innerWidth / 1440, window.innerHeight / 960), 0.8, 1.9);
+  uiZoom = zoomMode === 'auto' ? auto : clamp(zoomManual, 0.7, 2.2);
+  document.querySelector('.wrap').style.zoom = uiZoom.toFixed(3);
+  $('zAuto').classList.toggle('on', zoomMode === 'auto');
+  $('zAuto').textContent = zoomMode === 'auto' ? 'auto' : Math.round(uiZoom * 100) + '%';
+  try { localStorage.setItem('s33-ecliptic-zoom', JSON.stringify({ mode: zoomMode, value: zoomManual })); } catch (e) {}
+}
+$('zMinus').addEventListener('click', () => { zoomManual = (zoomMode === 'auto' ? uiZoom : zoomManual) - 0.1; zoomMode = 'manual'; fitWindow(); });
+$('zPlus').addEventListener('click', () => { zoomManual = (zoomMode === 'auto' ? uiZoom : zoomManual) + 0.1; zoomMode = 'manual'; fitWindow(); });
+$('zAuto').addEventListener('click', () => { zoomMode = 'auto'; fitWindow(); });
+window.addEventListener('resize', fitWindow);
+fitWindow();
+
 last = performance.now();
 requestAnimationFrame(frame);
 note('brain', 'ECLIPTIC ready · press ▶ · tip: Time 10× plays a whole arc in 2 minutes');

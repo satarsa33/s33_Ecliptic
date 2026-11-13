@@ -39,7 +39,7 @@ Inner ring = your setting · outer ring = after the arc. Drag, scroll or use the
 
 Files: `index.html`, `manifest.json`, `sw.js`, `icons/`.
 
-When you publish an update, bump `CACHE` in `sw.js` (`ecliptic-v1` → `ecliptic-v2`), or the installed app keeps showing the old version.
+When you publish an update, bump `CACHE` in `sw.js` (`ecliptic-v2` → `ecliptic-v3`), or the installed app keeps showing the old version.
 
 ## Later
 
