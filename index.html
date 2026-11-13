@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B0C10">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>S33 - Ecliptic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0C10; --panel:#101218; --line:#1C1F27; --line2:#2A2D37;
+    --text:#E8E6E1; --bright:#F4F1EA; --muted:#9A9AA3; --accent:#E8A84A;
+    --drone:#E8A84A; --pad:#C98BD9; --melody:#8FB8F0; --texture:#6FC3C0; --field:#9BC27A; --pulse:#E07A6A;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
+  button,select,input{font:inherit;color:var(--text)}
+  .wrap{max-width:1500px;margin:0 auto;padding:18px 28px 22px;display:flex;flex-direction:column;gap:16px}
+  .h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:13px;letter-spacing:.22em;font-weight:400;color:var(--muted)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 18px}
+  .hint{font-size:11px;color:var(--muted)}
+
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+  .brand{display:flex;align-items:baseline;gap:12px}
+  .brand .s33{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;color:var(--accent)}
+  .brand .nm{font-family:'Space Grotesk',sans-serif;font-size:22px;letter-spacing:.32em}
+  .tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-left:auto}
+  .round{width:52px;height:52px;border-radius:26px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-size:16px;cursor:pointer}
+  .round.on{background:var(--accent);color:var(--bg)}
+  .ghost{height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--line2);background:transparent;cursor:pointer}
+  .ghost:hover{border-color:#3A3E4A}
+  .ro{display:flex;flex-direction:column;padding:0 14px;border-left:1px solid var(--line)}
+  .ro small{font-size:11px;color:var(--muted);letter-spacing:.1em}
+  .ro span,.ro input{font-family:'JetBrains Mono',monospace;font-size:16px}
+  .ro input{background:transparent;border:none;border-bottom:1px dashed var(--line2);width:130px;padding:0}
+  .sel{height:32px;border-radius:7px;border:1px solid var(--line2);background:var(--bg);padding:0 8px;font-size:12px}
+
+  .arc{position:relative;overflow:hidden;padding-bottom:10px}
+  .arc .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+  .arc .opts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .arc label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;letter-spacing:.06em}
+  #arc{display:block;width:100%;height:330px;cursor:pointer}
+
+  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:stretch}
+  .harm{flex:1 1 290px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .harm .h2{align-self:flex-start}
+  #wheel{width:250px;height:250px}
+  .pills{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+  .pill{font-size:11px;padding:4px 9px;border-radius:10px;border:1px solid var(--line2);color:var(--muted)}
+  .pill.on{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:600}
+  .sec{font-size:11px;color:var(--muted);letter-spacing:.08em}
+
+  .cond{flex:2 1 520px;display:flex;flex-direction:column;gap:10px}
+  .cond .top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+  #knobs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;flex:1;align-items:center}
+  .knob{display:flex;flex-direction:column;align-items:center;gap:4px;user-select:none}
+  .knob svg{width:100%;max-width:120px;height:auto;cursor:ns-resize;touch-action:none;border-radius:50%}
+  .knob svg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .knob .lb{font-size:13px;font-weight:500}
+  .knob .rg{font-size:11px;color:var(--muted)}
+
+  .mix{flex:2 1 520px;display:flex;flex-direction:column;gap:10px}
+  #strips{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;flex:1}
+  .strip{display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px;background:var(--bg);padding:10px 6px;transition:opacity .6s}
+  .strip .cb{width:100%;height:3px;border-radius:2px}
+  .strip .nm{font-size:12px;font-weight:600}
+  .strip .st{font-size:10px;color:var(--muted);text-align:center;min-height:26px;line-height:1.3}
+  .strip .body{display:flex;gap:8px;align-items:flex-end;height:124px}
+  .meter{width:6px;height:120px;border-radius:3px;background:var(--line);display:flex;align-items:flex-end;overflow:hidden}
+  .meter i{display:block;width:6px;border-radius:3px;height:0}
+  input.fader{writing-mode:vertical-lr;direction:rtl;width:22px;height:120px;accent-color:#E8E6E1;margin:0}
+  .ms{display:flex;gap:4px}
+  .ms button{width:26px;height:22px;border-radius:4px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:10px;cursor:pointer}
+  .ms button.mu{background:#3A3E4A;color:var(--bright)}
+  .ms button.so{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+  .strip select{height:24px;font-size:10px;border-radius:5px;border:1px solid var(--line2);background:var(--panel);max-width:100%}
+
+.rec.on{background:#C8463A;border-color:#C8463A;color:#fff;font-family:'JetBrains Mono',monospace}
+  .primary{border-color:var(--accent);color:var(--accent)}
+  .take{display:flex;flex-wrap:wrap;align-items:center;gap:14px;border-color:#3A3E4A}
+  .take .dot{width:12px;height:12px;border-radius:6px;background:#C8463A}
+  .take .acts{margin-left:auto;display:flex;gap:8px}
+  .sess{display:flex;flex-direction:column;gap:10px}
+  .sessTop{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+  .sessRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .txt{height:40px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);padding:0 12px;min-width:240px}
+  .filebtn{display:inline-flex;align-items:center;position:relative;overflow:hidden;font-size:inherit;color:var(--text)}
+  .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  #sessList{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+  #sessList li{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  #sessList .meta{display:flex;flex-direction:column;min-width:0;flex:1}
+  #sessList .meta b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #sessList .meta span{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  #sessList button{height:32px;padding:0 10px;border-radius:6px;border:1px solid var(--line2);background:transparent;cursor:pointer;font-size:12px}
+  footer{display:flex;flex-wrap:wrap;gap:22px;align-items:center;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+  #ticker{display:flex;gap:22px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace}
+  footer .stats{margin-left:auto;display:flex;gap:16px;flex-wrap:wrap}
+  footer b{font-family:'JetBrains Mono',monospace;font-weight:400;color:var(--text)}
+  details{font-size:12px;color:var(--muted)}
+  summary{cursor:pointer;letter-spacing:.1em}
+  .log{font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;max-height:220px;overflow:auto;white-space:pre;margin-top:8px}
+  .c-brain{color:var(--text)} .c-drone{color:var(--drone)} .c-pad{color:var(--pad)} .c-melody{color:var(--melody)}
+  .c-texture{color:var(--texture)} .c-field{color:var(--field)} .c-pulse{color:var(--pulse)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="s33">S33</span><span class="nm">ECLIPTIC</span></div>
+    <div class="tools">
+      <button class="round" id="play" type="button" aria-label="Play">▶</button>
+      <button class="ghost" id="restart" type="button" title="Back to the start of the arc">⟲ Restart</button>
+      <div class="ro"><small>SESSION</small><span id="clock">00:00 / 20:00</span></div>
+      <div class="ro"><small>SEED</small><input id="seed" aria-label="Seed" value="4721-ORION" spellcheck="false"></div>
+      <button class="ghost" id="newseed" type="button">New seed</button>
+      <button class="ghost" id="sessBtn" type="button" aria-expanded="false" aria-controls="sessPanel">Sessions</button>
+      <button class="ghost rec" id="recBtn" type="button" aria-pressed="false">● Rec</button>
+    </div>
+  </header>
+
+  <div class="panel take" id="take" hidden>
+    <span class="dot" aria-hidden="true"></span>
+    <div><b id="takeTitle">Take ready</b><div class="hint" id="takeInfo"></div></div>
+    <div class="acts"><button class="ghost primary" id="takeSave" type="button">Save take (.zip)</button><button class="ghost" id="takeDrop" type="button">Discard</button></div>
+    <div class="hint" id="takeMsg" style="flex-basis:100%"></div>
+  </div>
+
+  <section class="panel sess" id="sessPanel" hidden aria-labelledby="sess-h">
+    <div class="sessTop">
+      <h2 class="h2" id="sess-h">SESSIONS</h2>
+      <span class="hint">a session keeps seed, arc, macros, mix, timbre and position · same seed + same settings = the same piece</span>
+    </div>
+    <div class="sessRow">
+      <label class="sr" for="sessName">Session name</label>
+      <input id="sessName" class="txt" placeholder="Name this session" maxlength="60">
+      <button class="ghost primary" id="sessSave" type="button">Save here</button>
+      <button class="ghost" id="sessExport" type="button">Export .json</button>
+      <label class="ghost filebtn">Import .json<input type="file" id="sessImport" accept=".json,application/json"></label>
+    </div>
+    <ul id="sessList"></ul>
+    <div class="hint" id="sessMsg"></div>
+  </section>
+
+  <section class="panel arc" aria-labelledby="arc-h">
+    <div class="top">
+      <h2 class="h2" id="arc-h">THE ARC · <span id="shapeName">TIDE</span></h2>
+      <div class="opts">
+        <label>SHAPE <select class="sel" id="shape"><option value="tide" selected>Tide</option><option value="dawn">Dawn</option><option value="night">Night</option><option value="waves">Waves</option></select></label>
+        <label>LENGTH <select class="sel" id="length"><option value="600">10 min</option><option value="1200" selected>20 min</option><option value="2400">40 min</option><option value="3600">60 min</option></select></label>
+        <label>TIME <select class="sel" id="speed"><option value="1" selected>1× real</option><option value="4">4× preview</option><option value="10">10× preview</option></select></label>
+      </div>
+    </div>
+    <canvas id="arc" aria-label="The six layers flowing over the session. Left of the playhead: what really sounded. Right: the forecast. Click to jump."></canvas>
+    <p class="hint" style="margin:6px 0 0">Left of the playhead: what really sounded, measured on each layer. Right: what the brain expects, veiled. Click anywhere to jump.</p>
+  </section>
+
+  <div class="row">
+    <section class="panel harm" aria-labelledby="harm-h">
+      <h2 class="h2" id="harm-h">HARMONY</h2>
+      <svg id="wheel" viewBox="0 0 300 300" role="img" aria-label="Circle of fifths with the current key"></svg>
+      <div class="pills" id="pills">
+        <span class="pill" data-s="stable">Stable</span><span class="pill" data-s="suspended">Suspended</span>
+        <span class="pill" data-s="modulating">Modulating</span><span class="pill" data-s="dark">Dark</span>
+      </div>
+      <div class="sec">SECTION <span id="secName" style="color:var(--bright)">–</span> · INTENSITY <span id="intens" style="color:var(--bright)">–</span></div>
+    </section>
+
+    <section class="panel cond" aria-labelledby="cond-h">
+      <div class="top"><h2 class="h2" id="cond-h">CONDUCT</h2><span class="hint">inner ring: your hand · outer ring: after the arc · drag, scroll or arrow keys · double-click resets</span></div>
+      <div id="knobs"></div>
+    </section>
+
+    <section class="panel mix" aria-labelledby="mix-h">
+      <h2 class="h2" id="mix-h">LAYERS</h2>
+      <div id="strips"></div>
+    </section>
+  </div>
+
+  <footer>
+    <div id="ticker"></div>
+    <div class="stats">
+      <span>OUT <b id="meter">−∞ dB</b></span>
+      <span>Next chord <b id="nextc">–</b></span>
+      <span>Mother Board: off</span>
+    </div>
+  </footer>
+  <details><summary>EVENT LOG — what the brain decides, MIDI-translatable</summary><div class="log" id="log"></div></details>
+</div>
+
+<script>
+
+'use strict';
+
+/* =========================================================
+   UTILS
+   ========================================================= */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const NOTE = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+const NOTE_FLAT = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const spell = (pc, keyPc) => ([5,10,3,8,1].includes(keyPc) ? NOTE_FLAT : ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'])[((pc%12)+12)%12];
+const midiName = m => NOTE[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+const fmt = s => { s = Math.max(0, Math.floor(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+
+function seedRng(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  let a = h >>> 0;
+  return function () { // mulberry32
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function pickWeighted(rng, items) { // items: [[value, weight]]
+  let tot = 0; for (const [, w] of items) tot += Math.max(0, w);
+  let r = rng() * tot;
+  for (const [v, w] of items) { r -= Math.max(0, w); if (r <= 0) return v; }
+  return items[items.length - 1][0];
+}
+
+/* =========================================================
+   1 · BRAIN — pure logic. No audio, no DOM.
+   It only emits events. The Body (or a MIDI adapter,
+   or the Mother Board) decides what to do with them.
+   ========================================================= */
+const ARC_SHAPES = {
+  tide:  [[0,.10],[.2,.35],[.4,.60],[.6,.85],[.8,.40],[1,.15]],
+  dawn:  [[0,.05],[.3,.20],[.6,.45],[.85,.80],[1,.70]],
+  night: [[0,.60],[.3,.45],[.55,.30],[.8,.15],[1,.05]],
+  waves: [[0,.20],[.2,.60],[.35,.30],[.55,.75],[.7,.35],[.9,.60],[1,.20]]
+};
+const SECTIONS = [
+  { name: 'Emergence', from: 0,   to: .2,  lean: 'stable' },
+  { name: 'Drift',     from: .2,  to: .4,  lean: 'suspended' },
+  { name: 'Bloom',     from: .4,  to: .62, lean: 'modulating' },
+  { name: 'Hollow',    from: .62, to: .8,  lean: 'dark' },
+  { name: 'Return',    from: .8,  to: 1,   lean: 'stable' }
+];
+const MODES = {
+  lydian:     [0,2,4,6,7,9,11],
+  ionian:     [0,2,4,5,7,9,11],
+  mixolydian: [0,2,4,5,7,9,10],
+  dorian:     [0,2,3,5,7,9,10],
+  aeolian:    [0,2,3,5,7,8,10],
+  phrygian:   [0,1,3,5,7,8,10]
+};
+const FIELD_SCENES = {
+  Emergence: { wind: .6, rain: 0,  tape: .4, surf: 0 },
+  Drift:     { wind: .3, rain: 0,  tape: .3, surf: .6 },
+  Bloom:     { wind: 0,  rain: .45, tape: .2, surf: .25 },
+  Hollow:    { wind: .7, rain: .3, tape: .5, surf: 0 },
+  Return:    { wind: .15, rain: 0, tape: .4, surf: .5 }
+};
+function euclid(k, n, rot) {
+  const p = [];
+  for (let i = 0; i < n; i++) p.push(Math.floor((i + 1) * k / n) - Math.floor(i * k / n));
+  const first = Math.max(0, p.indexOf(1));                 // start on a hit, then rotate
+  return p.map((_, i) => p[(i + first + n - (rot % n)) % n]);
+}
+const BRIGHT_ORDER = ['lydian','ionian','mixolydian','dorian','aeolian'];
+
+function arcIntensity(shape, x) {
+  const pts = ARC_SHAPES[shape] || ARC_SHAPES.tide;
+  x = clamp(x);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
+    if (x <= x1) { const t = (x - x0) / (x1 - x0 || 1); const s = t * t * (3 - 2 * t); return lerp(y0, y1, s); }
+  }
+  return pts[pts.length - 1][1];
+}
+function sectionAt(x) { return SECTIONS.find(s => x >= s.from && x < s.to) || SECTIONS[SECTIONS.length - 1]; }
+
+class Brain {
+  constructor(emit) {
+    this.emit = emit;
+    this.macros = { density: 38, light: 62, tension: 35, space: 70, motion: 40 };
+    this.shape = 'tide';
+    this.length = 1200;
+    this.reset('4721-ORION');
+  }
+  reset(seed) {
+    this.seed = seed;
+    this.rng = seedRng(seed);
+    this.t = 0;                         // session time (musical seconds)
+    this.home = Math.floor(this.rng() * 12);
+    this.root = this.home;              // current key root (pitch class)
+    this.fifthsAway = 0;                // how far we modulated from home
+    this.mode = null;
+    this.hstate = 'stable';
+    this.degree = 0;
+    this.padVoices = [];
+    this.nextChordAt = 0;
+    this.nextParamAt = 0;
+    this.droneRoot = null;
+    this.chordName = '';
+    // melody
+    this.chordPcs = [];
+    this.scalePcs = [];
+    this.melQueue = [];
+    this.nextPhraseAt = 20;
+    this.lastMel = null;
+    // texture
+    this.melSpeakUntil = -1;
+    this.wasSpeaking = false;
+    this.texLife = 0.8;
+    // field
+    this.fieldSection = null;
+    this.fieldMix = { wind: 0, rain: 0, tape: 0, surf: 0 };
+    this.nextGustAt = 40;
+    // pulse (runs in real time, so preview speed never makes it frantic)
+    this.rt = 0;
+    this.bpm = 62 + Math.floor(this.rng() * 18);
+    this.pulseStep = 0;
+    this.nextStepRT = 0;
+    this.pulsePat = null;
+    this.pulseBar = 0;
+    this.pulsePres = 0;
+    this.pulseOn = false;
+    this.pulseSection = null;
+  }
+  intensity() { return arcIntensity(this.shape, (this.t % this.length) / this.length); }
+  // macros after the arc's influence, 0..1
+  effective(Iopt) {
+    const I = Iopt ?? this.intensity(), m = this.macros;
+    return {
+      I,
+      density: clamp(m.density / 100 * 0.55 + I * 0.45),
+      light:   clamp(m.light   / 100 * 0.8  + I * 0.2),
+      tension: clamp(m.tension / 100 * 0.6  + I * 0.4),
+      space:   clamp(m.space   / 100 * 0.8  + (1 - I) * 0.2),
+      motion:  clamp(m.motion  / 100 * 0.6  + I * 0.4)
+    };
+  }
+  targetMode(e) {
+    if (this.hstate === 'dark') return e.light < 0.25 ? 'phrygian' : 'aeolian';
+    const idx = Math.round((1 - e.light) * (BRIGHT_ORDER.length - 1));
+    return BRIGHT_ORDER[clamp(idx, 0, BRIGHT_ORDER.length - 1)];
+  }
+  // ---- main clock: called by the Face/host with real elapsed seconds
+  tick(dtReal, speed) {
+    this.t += dtReal * speed;
+    this.rt += dtReal;
+    const e = this.effective();
+    if (this.t >= this.nextChordAt) this.nextChord(e, speed);
+    if (this.t >= this.nextPhraseAt && this.melQueue.length === 0 && this.chordPcs.length) this.makePhrase(e, speed);
+    while (this.melQueue.length && this.melQueue[0].t <= this.t) {
+      const n = this.melQueue.shift();
+      this.emit({ type: 'note', layer: 'melody', midi: n.midi, vel: n.vel, dur: n.dur });
+    }
+    // Texture listens to Melody: it thins out while the melody speaks
+    const speaking = this.t < this.melSpeakUntil;
+    if (speaking !== this.wasSpeaking) {
+      this.wasSpeaking = speaking;
+      this.emit({ type: 'listen', layer: 'texture', text: speaking ? 'thins out · Melody speaks' : 'fills back in' });
+    }
+    if (this.t >= this.nextParamAt) {
+      this.nextParamAt = this.t + 0.5 * speed;
+      this.texLife = clamp(this.texLife + (this.rng() - 0.5) * 0.06, 0.4, 1.2);   // its own slow life
+      const duck = speaking ? 0.3 : 1;
+      this.emit({ type: 'param', layer: 'master', values: {
+        padCutoff:   350 + 3600 * Math.pow(e.light, 1.6) * (0.45 + 0.55 * e.I),
+        droneCutoff: 220 + 900 * e.light * (0.4 + 0.6 * e.I),
+        reverb:      0.12 + 0.62 * e.space,
+        delay:       0.03 + 0.22 * e.space,
+        lfoRate:     0.015 + 0.18 * e.motion,
+        lfoDepth:    0.12 + 0.35 * e.motion,
+        melCutoff:   1300 + 3200 * Math.pow(e.light, 1.3) * (0.6 + 0.4 * e.I),
+        texRate:     (2 + 22 * e.density) * duck * this.texLife,
+        texSize:     lerp(0.6, 0.12, e.motion),
+        texSpray:    0.2 + 0.8 * e.motion,
+        texShimmer:  clamp(e.light * 0.6 + e.I * 0.2),
+        texCutoff:   1500 + 4500 * Math.pow(e.light, 1.2),
+        texLevel:    duck,
+        fieldLevel:  (0.25 + 0.65 * e.space) * (1 - 0.45 * e.I),
+        fieldCutoff: 1400 + 6000 * e.light,
+        pulseLevel:  this.pulsePres,
+        pulseCutoff: 1600 + 4500 * e.light
+      }});
+    }
+    this.fieldTick(e, speed);
+    this.pulseTick(e);
+  }
+  // ---- Field: the place. Each section suggests a different landscape.
+  fieldTick(e, speed) {
+    const sec = sectionAt((this.t % this.length) / this.length);
+    if (sec.name !== this.fieldSection) {
+      this.fieldSection = sec.name;
+      const base = FIELD_SCENES[sec.name], mix = {};
+      for (const k in base) mix[k] = +(clamp(base[k] * (0.6 + this.rng() * 0.8))).toFixed(2);
+      this.fieldMix = mix;
+      this.emit({ type: 'field', layer: 'field', scene: sec.name, mix });
+    }
+    if (this.t >= this.nextGustAt) {
+      this.nextGustAt = this.t + (25 + this.rng() * 55) * Math.sqrt(speed);
+      if (this.fieldMix.wind > 0.15) this.emit({ type: 'gust', layer: 'field', strength: +(0.4 + this.rng() * 0.6).toFixed(2) });
+    }
+  }
+  // ---- Pulse: a soft heartbeat that arrives only when the arc asks for it
+  makePulsePattern(e) {
+    const dark = this.hstate === 'dark';
+    const kK = 1 + Math.round(e.density * 2);
+    const kW = 2 + Math.round(e.density * 4 + e.I * 2);
+    const kS = dark ? 0 : 3 + Math.round(e.density * 7 + e.I * 3);
+    const tones = this.chordPcs.length ? this.chordPcs : [this.root];
+    const wood = euclid(kW, 16, Math.floor(this.rng() * 16));
+    this.pulsePat = {
+      kick: euclid(kK, 16, 0),
+      wood,
+      woodPitch: wood.map(() => { const pc = tones[Math.floor(this.rng() * tones.length)]; return 72 + ((pc - 0 + 12) % 12); }),
+      shaker: kS ? euclid(kS, 16, Math.floor(this.rng() * 4)) : new Array(16).fill(0)
+    };
+    const show = a => a.map(x => x ? '●' : '·').join('');
+    this.emit({ type: 'pulse-pattern', layer: 'pulse', bpm: this.bpm,
+                text: `K ${show(this.pulsePat.kick)}  W ${show(wood)}  S ${show(this.pulsePat.shaker)}` });
+  }
+  pulseTick(e) {
+    const sec = sectionAt((this.t % this.length) / this.length);
+    let target = clamp((e.I - 0.3) * 2.5);
+    if (sec.name === 'Emergence') target = 0;
+    if (sec.name === 'Return') target *= 0.6;
+    if (this.t < 90) target = 0;                              // never at the very beginning
+    this.pulsePres = +target.toFixed(2);
+    const on = target > 0.12;
+    if (on !== this.pulseOn) {
+      this.pulseOn = on;
+      this.emit({ type: 'listen', layer: 'pulse', text: on ? `enters · ${this.bpm} bpm` : 'fades out' });
+    }
+    const stepDur = 60 / this.bpm / 4;
+    if (this.nextStepRT < this.rt - 0.5) this.nextStepRT = this.rt;   // after a pause
+    while (this.nextStepRT < this.rt + 0.15) {
+      const step = this.pulseStep % 16;
+      if (step === 0) {
+        this.pulseBar++;
+        if (!this.pulsePat || this.pulseBar % 8 === 0 || sec.name !== this.pulseSection) { this.pulseSection = sec.name; this.makePulsePattern(e); }
+      }
+      if (on && this.pulsePat) {
+        const at = this.nextStepRT - this.rt;
+        const acc = (step % 8 === 0) ? 1 : (step % 4 === 0 ? 0.8 : 0.6);
+        const hum = () => (this.rng() - 0.5) * 0.012;
+        if (this.pulsePat.kick[step]) this.emit({ type: 'note', layer: 'pulse', voice: 'kick', midi: 36, vel: 0.7 * acc, in: Math.max(0, at) });
+        if (this.pulsePat.wood[step]) this.emit({ type: 'note', layer: 'pulse', voice: 'wood', midi: this.pulsePat.woodPitch[step], vel: 0.6 * acc, in: Math.max(0, at + hum()) });
+        if (this.pulsePat.shaker[step]) this.emit({ type: 'note', layer: 'pulse', voice: 'shaker', midi: 70, vel: (step % 2 ? 0.45 : 0.7) * acc, in: Math.max(0, at + hum()) });
+      }
+      this.nextStepRT += stepDur;
+      this.pulseStep++;
+    }
+  }
+  // ---- Melody: rare phrases, few words, long silences
+  makePhrase(e, speed) {
+    const slow = 1 / Math.sqrt(speed);
+    // don't start right before a chord change: wait for the new chord to settle
+    if (this.nextChordAt - this.t < 4 * speed * slow) { this.nextPhraseAt = this.nextChordAt + 2 * speed * slow; return; }
+    const silence = () => lerp(50, 12, e.density) * (0.6 + this.rng() * 0.8) * speed * slow;
+    if (this.rng() > 0.35 + 0.55 * e.density) { this.nextPhraseAt = this.t + silence(); return; }
+
+    const dark = this.hstate === 'dark';
+    const lo = dark ? 58 : 62 + Math.round(e.light * 3);
+    const hi = dark ? 76 : 78 + Math.round(e.light * 4);
+    const pool = [];
+    for (let m = lo; m <= hi; m++) if (this.scalePcs.includes(m % 12)) pool.push(m);
+    const isChord = m => this.chordPcs.includes(m % 12);
+    const nearestChordIdx = target => {
+      let bi = 0, bd = 1e9;
+      pool.forEach((m, i) => { if (isChord(m)) { const d = Math.abs(m - target); if (d < bd) { bd = d; bi = i; } } });
+      return bi;
+    };
+    const center = (lo + hi) / 2;
+    let idx = nearestChordIdx(this.lastMel !== null && this.lastMel >= lo && this.lastMel <= hi ? this.lastMel : center + (this.rng() - 0.5) * 6);
+
+    const len = 2 + Math.floor(this.rng() * (2 + e.density * 3));   // 2..6 notes
+    const peakAt = Math.floor(len * (0.35 + this.rng() * 0.3));
+    let off = 0;
+    const notes = [];
+    for (let i = 0; i < len; i++) {
+      if (i > 0) {
+        const step = pickWeighted(this.rng, [[1, 5], [2, 3], [3, 1.2], [0, 0.3]]);
+        let dir = i <= peakAt ? 1 : -1;
+        if (this.rng() < 0.2) dir = -dir;
+        let ni = idx + step * dir;
+        if (ni < 0 || ni > pool.length - 1) ni = idx - step * dir;   // bounce off the edges
+        idx = clamp(ni, 0, pool.length - 1);
+      }
+      if (i === len - 1) idx = nearestChordIdx(pool[idx]);          // land on a chord tone
+      let d = lerp(1.8, 0.8, e.motion) * (0.6 + this.rng() * 0.9);
+      if (i === len - 1) d *= 2.4;
+      const vel = clamp((i === 0 ? 0.7 : 0.55) + (this.rng() - 0.5) * 0.2, 0.3, 0.85);
+      notes.push({ t: this.t + off * speed * slow, midi: pool[idx], vel: +vel.toFixed(2), dur: d * slow });
+      off += d * (0.85 + this.rng() * 0.5);
+    }
+    this.lastMel = notes[notes.length - 1].midi;
+    this.melSpeakUntil = this.t + (off + 1.5) * speed * slow;
+    this.melQueue = notes;
+    this.nextPhraseAt = this.t + off * speed * slow + silence();
+    this.emit({ type: 'phrase', layer: 'melody', notes: notes.map(n => n.midi) });
+  }
+  chooseState(e) {
+    const sec = sectionAt((this.t % this.length) / this.length);
+    const w = { stable: 1.2, suspended: 1, modulating: 0.12, dark: 0.6 };
+    w[sec.lean] *= 3;
+    w.stable *= 1.5 - e.tension;
+    w.suspended *= 0.5 + e.tension;
+    w.modulating *= e.tension * 2.2;
+    w.dark *= 1.6 - e.light;
+    w[this.hstate] *= 2;                // inertia
+    if (this.hstate === 'modulating') w.modulating = 0; // never twice in a row
+    return pickWeighted(this.rng, Object.entries(w));
+  }
+  chooseDegree(e, scale) {
+    const base = [3, 1, 1.1, 2, 1.6, 2, 0.3];
+    const w = base.map((b, d) => {
+      let x = b;
+      if (d === this.degree) x *= 0.25;
+      const third = (scale[(d + 2) % 7] - scale[d] + 12) % 12;
+      const fifth = (scale[(d + 4) % 7] - scale[d] + 12) % 12;
+      if (fifth !== 7) x *= 0.08;       // avoid diminished
+      if (this.hstate === 'stable' && (d === 0 || d === 3)) x *= 2;
+      if (this.hstate === 'suspended' && (d === 0 || d === 4)) x *= 2.2;
+      if (this.hstate === 'dark' && (d === 5 || d === 3)) x *= 2;
+      if (this.hstate === 'dark' && third === 4 && d !== 5) x *= 0.6;
+      return [d, x];
+    });
+    return pickWeighted(this.rng, w);
+  }
+  nextChord(e, speed) {
+    const prevState = this.hstate;
+    this.hstate = this.chooseState(e);
+
+    // modulation: move the key by a fifth, pulled back towards home
+    if (this.hstate === 'modulating') {
+      let dir = this.rng() < 0.5 ? 1 : -1;
+      if (Math.abs(this.fifthsAway) >= 2) dir = -Math.sign(this.fifthsAway);
+      else if (this.fifthsAway !== 0 && this.rng() < 0.5) dir = -Math.sign(this.fifthsAway);
+      this.fifthsAway += dir;
+      this.root = ((this.home + this.fifthsAway * 7) % 12 + 12) % 12;
+      this.degree = 0;
+    }
+    // mode follows Light slowly
+    const tm = this.targetMode(e);
+    if (!this.mode || this.hstate === 'modulating' || (tm !== this.mode && this.rng() < 0.3) ||
+        (this.hstate === 'dark') !== (prevState === 'dark')) this.mode = tm;
+
+    const scale = MODES[this.mode];
+    if (this.hstate !== 'modulating') this.degree = this.chooseDegree(e, scale);
+    const d = this.degree;
+    const pcAt = k => (this.root + scale[(d + k) % 7]) % 12;
+
+    // chord tones
+    const r = pcAt(0);
+    let pcs = [r, pcAt(2), pcAt(4)];
+    let name;
+    const third = (pcAt(2) - r + 12) % 12;
+    const minor = third === 3;
+    const sev = (pcAt(6) - r + 12) % 12;
+    const useSev = e.tension > 0.28, useNin = e.tension > 0.55;
+    if (this.hstate === 'suspended') {
+      const sus4 = this.rng() < 0.4;
+      pcs[1] = sus4 ? pcAt(3) : pcAt(1);
+      name = spell(r, this.root) + (useSev ? '7' : '') + (sus4 ? 'sus4' : 'sus2');
+      if (useSev) pcs.push(pcAt(6));
+    } else {
+      name = spell(r, this.root) + (minor ? 'm' : '');
+      if (useSev) pcs.push(pcAt(6));
+      if (useNin) pcs.push(pcAt(1));
+      if (useNin) name += (sev === 11 ? 'maj9' : '9');
+      else if (useSev) name += (sev === 11 ? 'maj7' : '7');
+    }
+    this.chordName = name;
+    this.chordPcs = pcs.slice();
+    this.scalePcs = scale.map(x => (x + this.root) % 12);
+
+    // pad voicing with voice leading
+    const n = 3 + Math.round(e.density * 3);
+    const center = 54 + Math.round(e.light * 10);
+    const order = [pcs[1], pcs[3], pcs[4], pcs[2], pcs[0]].filter(x => x !== undefined);
+    const used = [];
+    for (let k = 0; k < n; k++) {
+      const pc = order[k % order.length];
+      const ref = this.padVoices[k] !== undefined ? this.padVoices[k] : center + (k - n / 2) * 4;
+      let best = null, bd = 1e9;
+      for (let m = 46; m <= 82; m++) {
+        if ((m % 12) !== pc || used.includes(m)) continue;
+        if (m < 55 && used.some(u => Math.abs(u - m) < 3)) continue; // no mud down low
+        const dd = Math.abs(m - ref) + Math.abs(m - center) * 0.15;
+        if (dd < bd) { bd = dd; best = m; }
+      }
+      if (best !== null) used.push(best);
+    }
+    used.sort((a, b) => a - b);
+    this.padVoices = used;
+
+    // timing (musical seconds), envelopes in real seconds
+    const interval = lerp(42, 13, e.motion) * (0.75 + this.rng() * 0.5);
+    this.nextChordAt = this.t + interval;
+    const slow = 1 / Math.sqrt(speed);
+    const vel = 0.5 + 0.35 * e.density;
+
+    this.emit({ type: 'harmony', root: this.root, key: spell(this.root, this.root), mode: this.mode, state: this.hstate,
+                section: sectionAt((this.t % this.length) / this.length).name, chord: name, intensity: e.I });
+    // texture source = the same chord, placed mid-high (the grains will shift it)
+    this.emit({ type: 'chord', layer: 'texture', name: name + ' grains',
+                notes: pcs.map(pc => ({ midi: 64 + ((pc - 4 + 12) % 12), vel: 0.7 })) });
+    this.emit({ type: 'chord', layer: 'pad', name,
+                notes: used.map(m => ({ midi: m, vel: +(vel * (0.85 + this.rng() * 0.3)).toFixed(2) })),
+                attack: lerp(7, 3.5, e.motion) * slow, release: lerp(10, 6, e.motion) * slow });
+
+    // drone: pedal on the key root, moves only when the key moves
+    if (this.droneRoot !== this.root) {
+      this.droneRoot = this.root;
+      let low = 36 + this.root; if (low > 43) low -= 12;
+      const notes = [low, low + 7];
+      this.emit({ type: 'chord', layer: 'drone', name: spell(this.root, this.root) + ' pedal',
+                  notes: notes.map(m => ({ midi: m, vel: 0.8 })), attack: 9 * slow, release: 12 * slow });
+    }
+  }
+}
+
+/* =========================================================
+   2 · BODY — Web Audio. Turns events into sound.
+   ========================================================= */
+class Body {
+  constructor() { this.ctx = null; }
+  init() {
+    if (this.ctx) return;
+    const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // master chain: sum -> comp -> master gain -> out
+    this.master = ctx.createGain(); this.master.gain.value = 0;
+    this.comp = ctx.createDynamicsCompressor();
+    this.comp.threshold.value = -20; this.comp.ratio.value = 3; this.comp.attack.value = 0.05; this.comp.release.value = 0.6;
+    this.sum = ctx.createGain(); this.sum.gain.value = 0.8;
+    this.analyser = ctx.createAnalyser(); this.analyser.fftSize = 2048;
+    this.sum.connect(this.comp); this.comp.connect(this.master); this.master.connect(ctx.destination); this.master.connect(this.analyser);
+
+    // reverb + delay sends
+    this.verb = ctx.createConvolver(); this.verb.buffer = this.makeIR(6.5);
+    this.verbSend = ctx.createGain(); this.verbSend.gain.value = 0.5;
+    this.verbSend.connect(this.verb); this.verb.connect(this.sum);
+    this.delay = ctx.createDelay(4); this.delay.delayTime.value = 0.86;
+    this.fb = ctx.createGain(); this.fb.gain.value = 0.42;
+    this.dlf = ctx.createBiquadFilter(); this.dlf.type = 'lowpass'; this.dlf.frequency.value = 1800;
+    this.delaySend = ctx.createGain(); this.delaySend.gain.value = 0.1;
+    this.delaySend.connect(this.delay); this.delay.connect(this.dlf); this.dlf.connect(this.fb); this.fb.connect(this.delay);
+    this.dlf.connect(this.verbSend); this.dlf.connect(this.sum);
+
+    // layers
+    this.layers = {};
+    for (const id of ['drone', 'pad', 'melody', 'texture', 'field', 'pulse']) {
+      const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.Q.value = id === 'pad' ? 0.9 : 0.6;
+      filt.frequency.value = ({ pad: 1500, melody: 3000, texture: 3500, field: 4000, pulse: 3500, drone: 500 })[id];
+      const gain = ctx.createGain(); gain.gain.value = 0.7;
+      filt.connect(gain); gain.connect(this.sum); gain.connect(this.verbSend); gain.connect(this.delaySend);
+      // slow LFO on the cutoff
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05; lfo.type = 'sine';
+      const lfoAmt = ctx.createGain(); lfoAmt.gain.value = 0;
+      lfo.connect(lfoAmt); lfoAmt.connect(filt.frequency); lfo.start();
+      const an = ctx.createAnalyser(); an.fftSize = 1024; an.smoothingTimeConstant = 0.5; gain.connect(an);
+      this.layers[id] = { filt, gain, lfo, lfoAmt, an, voices: [] };
+    }
+    this.layers.drone.gain.gain.value = 0.55;
+    // the melody lives a bit more in the echoes
+    this.melEcho = ctx.createGain(); this.melEcho.gain.value = 1.2;
+    this.layers.melody.gain.connect(this.melEcho); this.melEcho.connect(this.delaySend);
+    this.timbre = this.timbre || 'glass';
+    // texture: high-passed grain bus
+    this.texHP = ctx.createBiquadFilter(); this.texHP.type = 'highpass'; this.texHP.frequency.value = 260;
+    this.texHP.connect(this.layers.texture.filt);
+    this.tex = { buf: null, rate: 0, target: 0, size: 0.3, spray: 0.4, shimmer: 0.3, nextAt: 0, level: 1 };
+    const N = 128; this.hann = new Float32Array(N);
+    for (let i = 0; i < N; i++) this.hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+    this.texTimer = setInterval(() => { this.grainScheduler(); this.rainScheduler(); }, 25);
+    this.initField();
+    this.initPulse();
+  }
+  // ---- noise buffers
+  noiseBuf(sec, brown) {
+    const sr = this.ctx.sampleRate, len = Math.floor(sr * sec), b = this.ctx.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch); let last = 0;
+      for (let i = 0; i < len; i++) {
+        const w = Math.random() * 2 - 1;
+        if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w;
+      }
+      // smooth the loop seam
+      const f = Math.floor(sr * 0.05);
+      for (let i = 0; i < f; i++) { const g = i / f; d[i] = d[i] * g + d[len - f + i] * (1 - g); }
+    }
+    return b;
+  }
+  loopNoise(buf) { const s = this.ctx.createBufferSource(); s.buffer = buf; s.loop = true; s.start(); return s; }
+  // ---- Field: wind, rain, tape, surf
+  initField() {
+    const ctx = this.ctx, L = this.layers.field;
+    this.white = this.noiseBuf(4, false); this.brown = this.noiseBuf(6, true);
+    this.fieldPres = ctx.createGain(); this.fieldPres.gain.value = 0.5; this.fieldPres.connect(L.filt);
+    const src = {};
+    const mk = () => { const g = ctx.createGain(); g.gain.value = 0; g.connect(this.fieldPres); return g; };
+    // wind: brown noise through a wandering bandpass
+    src.wind = mk();
+    const wn = this.loopNoise(this.brown), wbp = ctx.createBiquadFilter(); wbp.type = 'bandpass'; wbp.frequency.value = 520; wbp.Q.value = 1.4;
+    const wl = ctx.createOscillator(); wl.frequency.value = 0.06; const wla = ctx.createGain(); wla.gain.value = 260; wl.connect(wla); wla.connect(wbp.frequency); wl.start();
+    const wamp = ctx.createGain(); wamp.gain.value = 1.4; wn.connect(wbp); wbp.connect(wamp); wamp.connect(src.wind);
+    this.windBP = wbp; this.windAmp = wamp;
+    // rain bed: white noise, high and soft (drops are scheduled separately)
+    src.rain = mk();
+    const rn = this.loopNoise(this.white), rhp = ctx.createBiquadFilter(); rhp.type = 'highpass'; rhp.frequency.value = 2500;
+    const rlp = ctx.createBiquadFilter(); rlp.type = 'lowpass'; rlp.frequency.value = 9000;
+    const rg = ctx.createGain(); rg.gain.value = 0.1; rn.connect(rhp); rhp.connect(rlp); rlp.connect(rg); rg.connect(src.rain);
+    // tape hiss with slow wow
+    src.tape = mk();
+    const tn = this.loopNoise(this.white), thp = ctx.createBiquadFilter(); thp.type = 'highpass'; thp.frequency.value = 1800;
+    const tlp = ctx.createBiquadFilter(); tlp.type = 'lowpass'; tlp.frequency.value = 7000;
+    const tg = ctx.createGain(); tg.gain.value = 0.045;
+    const tw = ctx.createOscillator(); tw.frequency.value = 0.3; const twa = ctx.createGain(); twa.gain.value = 0.012; tw.connect(twa); twa.connect(tg.gain); tw.start();
+    tn.connect(thp); thp.connect(tlp); tlp.connect(tg); tg.connect(src.tape);
+    // distant surf: brown noise, a lowpass that breathes, with a swell in level
+    src.surf = mk();
+    const sn = this.loopNoise(this.brown), slp = ctx.createBiquadFilter(); slp.type = 'lowpass'; slp.frequency.value = 600; slp.Q.value = 0.5;
+    const sl = ctx.createOscillator(); sl.frequency.value = 0.085;
+    const sla = ctx.createGain(); sla.gain.value = 420; sl.connect(sla); sla.connect(slp.frequency);
+    const sg = ctx.createGain(); sg.gain.value = 0.55; const sga = ctx.createGain(); sga.gain.value = 0.45; sl.connect(sga); sga.connect(sg.gain); sl.start();
+    sn.connect(slp); slp.connect(sg); sg.connect(src.surf);
+    this.fieldSrc = src;
+    this.rain = 0;
+  }
+  setFieldMix(mix) { for (const k in mix) this.fieldSrc[k].gain.setTargetAtTime(mix[k], this.now, 4); this.rain = mix.rain || 0; }
+  gust(strength) {
+    const t = this.now, f = this.windBP.frequency, a = this.windAmp.gain;
+    a.cancelScheduledValues(t); a.setTargetAtTime(1.4 + 1.6 * strength, t, 1.2); a.setTargetAtTime(1.4, t + 3.5, 2.5);
+    this.windBP.Q.setTargetAtTime(2.5, t, 1); this.windBP.Q.setTargetAtTime(1.4, t + 3.5, 2);
+  }
+  rainScheduler() {
+    if (!this.ctx || !this.running || this.rain < 0.05) return;
+    const ahead = this.now + 0.12;
+    if (!this.nextDrop || this.nextDrop < this.now) this.nextDrop = this.now;
+    while (this.nextDrop < ahead) {
+      const t = this.nextDrop, ctx = this.ctx;
+      const s = ctx.createBufferSource(); s.buffer = this.white;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800 + Math.random() * 5000; bp.Q.value = 4 + Math.random() * 6;
+      const g = ctx.createGain(); const d = 0.006 + Math.random() * 0.02;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25 * (0.3 + Math.random() * 0.7), t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      const p = ctx.createStereoPanner(); p.pan.value = Math.random() * 2 - 1;
+      s.connect(bp); bp.connect(g); g.connect(p); p.connect(this.fieldSrc.rain);
+      s.start(t, Math.random() * 3, d + 0.02); s.stop(t + d + 0.03);
+      this.nextDrop += (1 / (6 + 40 * this.rain)) * (0.3 + Math.random() * 1.4);
+    }
+  }
+  // ---- Pulse: soft kick, pitched wood, shaker
+  initPulse() {
+    this.pulsePres = this.ctx.createGain(); this.pulsePres.gain.value = 0; this.pulsePres.connect(this.layers.pulse.filt);
+    this.pulseEcho = this.ctx.createGain(); this.pulseEcho.gain.value = 0.6; this.pulsePres.connect(this.pulseEcho); this.pulseEcho.connect(this.verbSend);
+  }
+  playPulse(voice, midi, vel, inSec) {
+    const ctx = this.ctx, t = this.now + (inSec || 0), out = this.pulsePres;
+    if (voice === 'kick') {
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(105, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.09);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.32 * vel, t + 0.006); g.gain.setTargetAtTime(0, t + 0.01, 0.11);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.8);
+    } else if (voice === 'wood') {
+      const f = mtof(midi), o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const m = ctx.createOscillator(); m.frequency.value = f * 2.76; const mg = ctx.createGain();
+      mg.gain.setValueAtTime(f * 0.8, t); mg.gain.setTargetAtTime(0, t, 0.015); m.connect(mg); mg.connect(o.frequency);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.09 * vel, t + 0.003); g.gain.setTargetAtTime(0, t + 0.004, 0.06);
+      const p = ctx.createStereoPanner(); p.pan.value = (Math.random() * 2 - 1) * 0.4;
+      o.connect(g); g.connect(p); p.connect(out); o.start(t); m.start(t); o.stop(t + 0.5); m.stop(t + 0.5);
+    } else {
+      const s = ctx.createBufferSource(); s.buffer = this.white;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 6500; bp.Q.value = 0.9;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.06 * vel, t + 0.012); g.gain.setTargetAtTime(0, t + 0.014, 0.03);
+      const p = ctx.createStereoPanner(); p.pan.value = 0.25;
+      s.connect(bp); bp.connect(g); g.connect(p); p.connect(out); s.start(t, Math.random() * 3, 0.3); s.stop(t + 0.3);
+    }
+  }
+  // ---- texture: build a source from the chord, then scatter grains of it
+  buildTexture(notes) {
+    const sr = this.ctx.sampleRate, len = Math.floor(sr * 3);
+    const buf = this.ctx.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (const n of notes) {
+        const f = mtof(n.midi) * (1 + (ch ? 0.0012 : -0.0012));
+        const ph = Math.random() * 6.28, wob = 0.3 + Math.random() * 0.6;
+        const w1 = 2 * Math.PI * f / sr, w2 = 2 * w1, w3 = 3 * w1, ww = 2 * Math.PI * wob / sr;
+        for (let i = 0; i < len; i++) {
+          const a = 0.75 + 0.25 * Math.sin(ww * i + ph);
+          d[i] += a * (Math.sin(w1 * i + ph) + 0.3 * Math.sin(w2 * i) + 0.12 * Math.sin(w3 * i + ph));
+        }
+      }
+      let mx = 0; for (let i = 0; i < len; i++) mx = Math.max(mx, Math.abs(d[i]));
+      if (mx > 0) for (let i = 0; i < len; i++) d[i] /= mx;
+    }
+    this.tex.buf = buf;
+  }
+  grainScheduler() {
+    if (!this.ctx || !this.running || !this.tex.buf) return;
+    const T = this.tex, ahead = this.now + 0.12;
+    T.rate += (T.target - T.rate) * 0.04;                 // smooth: ~1 s to duck or recover
+    if (T.rate < 0.2) { T.nextAt = this.now; return; }
+    if (T.nextAt < this.now) T.nextAt = this.now;
+    while (T.nextAt < ahead) {
+      this.grain(T.nextAt);
+      T.nextAt += (1 / T.rate) * (0.4 + Math.random() * 1.2);
+    }
+  }
+  grain(t) {
+    const ctx = this.ctx, T = this.tex, buf = T.buf;
+    const size = T.size * (0.7 + Math.random() * 0.6);
+    const shift = pickWeighted(Math.random, [[0, 3], [12, 2 * T.shimmer], [7, T.shimmer], [-12, 0.6], [19, T.shimmer * 0.5]]);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    src.playbackRate.value = Math.pow(2, shift / 12);
+    src.detune.value = (Math.random() * 2 - 1) * 25 * T.spray;
+    const env = ctx.createGain(); env.gain.value = 0;
+    env.gain.setValueCurveAtTime(this.hann, t, size);
+    const amp = ctx.createGain(); amp.gain.value = 0.05 * (shift > 0 ? 0.7 : 1);
+    const pan = ctx.createStereoPanner(); pan.pan.value = (Math.random() * 2 - 1) * (0.3 + 0.6 * T.spray);
+    src.connect(env); env.connect(amp); amp.connect(pan); pan.connect(this.texHP);
+    const maxOff = Math.max(0, buf.duration - size * src.playbackRate.value - 0.05);
+    src.start(t, Math.random() * maxOff, size * src.playbackRate.value + 0.02);
+    src.stop(t + size + 0.05);
+  }
+  // ---- melody voices: soft FM / breath, short-lived
+  playMelody(midi, vel, dur) {
+    const ctx = this.ctx, t = this.now, f = mtof(midi), L = this.layers.melody;
+    const out = ctx.createGain(); out.gain.setValueAtTime(0, t);
+    const peak = 0.11 * vel;
+    const nodes = [];
+    const osc = (type, freq) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq; nodes.push(o); return o; };
+    const fm = (ratio, idxStart, idxEnd, idxTime) => {
+      const car = osc('sine', f), mod = osc('sine', f * ratio), mg = ctx.createGain();
+      mg.gain.setValueAtTime(f * idxStart, t); mg.gain.setTargetAtTime(f * idxEnd, t, idxTime);
+      mod.connect(mg); mg.connect(car.frequency); car.connect(out); return car;
+    };
+    let att = 0.01, decay = dur;
+    if (this.timbre === 'glass') { fm(2, 0.9, 0.12, 0.35); att = 0.015; decay = dur * 1.1; }
+    else if (this.timbre === 'rhodes') {
+      fm(1, 1.6, 0.25, 0.25); att = 0.006; decay = dur * 1.3;
+      const tine = osc('sine', f * 7), tg = ctx.createGain();
+      tg.gain.setValueAtTime(0.12, t); tg.gain.setTargetAtTime(0, t, 0.06); tine.connect(tg); tg.connect(out);
+    } else if (this.timbre === 'bell') { fm(3.5, 0.7, 0, 0.5); const s = osc('sine', f); const sg = ctx.createGain(); sg.gain.value = 0.6; s.connect(sg); sg.connect(out); att = 0.008; decay = dur * 1.8; }
+    else { // breath
+      const s = osc('sine', f), tr = osc('triangle', f * 2), tg = ctx.createGain(); tg.gain.value = 0.18;
+      s.connect(out); tr.connect(tg); tg.connect(out);
+      const vib = osc('sine', 4.6), vg = ctx.createGain(); vg.gain.setValueAtTime(0, t); vg.gain.linearRampToValueAtTime(f * 0.004, t + 0.8);
+      vib.connect(vg); vg.connect(s.frequency); vg.connect(tr.frequency);
+      att = 0.14; decay = dur * 0.9;
+    }
+    out.gain.linearRampToValueAtTime(peak, t + att);
+    if (this.timbre === 'breath') { out.gain.setValueAtTime(peak, t + att + dur * 0.5); out.gain.setTargetAtTime(0, t + att + dur * 0.5, 0.35); }
+    else out.gain.setTargetAtTime(0, t + att, decay / 3);
+    const end = t + att + decay * 2.5 + 0.5;
+    for (const n of nodes) { n.start(t); n.stop(end); }
+    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    if (pan) { pan.pan.value = (Math.random() * 2 - 1) * 0.35; out.connect(pan); pan.connect(L.filt); } else out.connect(L.filt);
+  }
+  makeIR(sec) {
+    const ctx = this.ctx, len = Math.floor(ctx.sampleRate * sec);
+    const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch); let lp = 0;
+      for (let i = 0; i < len; i++) {
+        const t = i / len;
+        lp = lp * 0.55 + (Math.random() * 2 - 1) * 0.45; // darken
+        d[i] = lp * Math.pow(1 - t, 2.6) * (i < 400 ? i / 400 : 1);
+      }
+    }
+    return buf;
+  }
+  get now() { return this.ctx.currentTime; }
+  async start() { this.init(); await this.ctx.resume(); this.running = true; this.setMaster(this.masterLevel ?? 0.7); }
+  stop() {
+    this.running = false;
+    if (!this.ctx) return;
+    const t = this.now; this.master.gain.cancelScheduledValues(t);
+    this.master.gain.setTargetAtTime(0, t, 0.6);
+    for (const L of Object.values(this.layers)) { this.releaseAll(L, 3); }
+  }
+  setMaster(v) { this.masterLevel = v; if (!this.ctx) return; this.master.gain.setTargetAtTime(v * 0.9, this.now, 0.3); }
+  setLayer(id, v) { if (!this.ctx) return; this.layers[id].gain.gain.setTargetAtTime(v * (id === 'drone' ? 0.8 : 1), this.now, 0.3); }
+
+  makeVoice(layerId, midi, vel, attack) {
+    const ctx = this.ctx, t = this.now, L = this.layers[layerId], f = mtof(midi);
+    const out = ctx.createGain(); out.gain.setValueAtTime(0, t);
+    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    const peak = (layerId === 'pad' ? 0.045 : 0.09) * vel;
+    out.gain.linearRampToValueAtTime(peak, t + attack);
+    const oscs = [];
+    const add = (type, detune, g, mult = 1) => {
+      const o = ctx.createOscillator(); o.type = type; o.frequency.value = f * mult; o.detune.value = detune;
+      const og = ctx.createGain(); og.gain.value = g; o.connect(og); og.connect(out); o.start(t); oscs.push(o);
+    };
+    if (layerId === 'pad') {
+      add('sawtooth', -7 - Math.random() * 3, 0.5);
+      add('sawtooth', 7 + Math.random() * 3, 0.5);
+      add('triangle', 0, 0.6, 0.5);
+    } else {
+      add('sawtooth', -4, 0.35);
+      add('sawtooth', 4.5, 0.35);
+      add('sine', 0, 0.9);
+      add('sine', 1.5, 0.25, 2);
+    }
+    if (pan) { pan.pan.value = (Math.random() * 2 - 1) * (layerId === 'pad' ? 0.55 : 0.2); out.connect(pan); pan.connect(L.filt); }
+    else out.connect(L.filt);
+    return { out, oscs, midi };
+  }
+  release(v, rel) {
+    const t = this.now, g = v.out.gain;
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); }
+    g.setTargetAtTime(0, t, rel / 4);
+    for (const o of v.oscs) o.stop(t + rel * 1.6);
+  }
+  releaseAll(L, rel) { for (const v of L.voices) this.release(v, rel); L.voices = []; }
+
+  // ---- the only entry point the Brain needs
+  handle(ev) {
+    if (!this.ctx) return;
+    if (ev.type === 'chord' && ev.layer === 'texture') { this.buildTexture(ev.notes); return; }
+    if (ev.type === 'field') { this.setFieldMix(ev.mix); return; }
+    if (ev.type === 'gust') { this.gust(ev.strength); return; }
+    if (ev.type === 'note' && ev.layer === 'pulse') { if (this.running) this.playPulse(ev.voice, ev.midi, ev.vel, ev.in); return; }
+    if (ev.type === 'chord') {
+      const L = this.layers[ev.layer]; if (!L) return;
+      this.releaseAll(L, ev.release);
+      L.voices = ev.notes.map(n => this.makeVoice(ev.layer, n.midi, n.vel, ev.attack));
+    } else if (ev.type === 'note' && ev.layer === 'melody') {
+      this.playMelody(ev.midi, ev.vel, ev.dur);
+    } else if (ev.type === 'param') {
+      this.layers.melody.filt.frequency.setTargetAtTime(ev.values.melCutoff, this.now, 1.5);
+      Object.assign(this.tex, { target: ev.values.texRate, size: ev.values.texSize, spray: ev.values.texSpray, shimmer: ev.values.texShimmer });
+      this.layers.texture.filt.frequency.setTargetAtTime(ev.values.texCutoff, this.now, 1.5);
+      this.fieldPres.gain.setTargetAtTime(ev.values.fieldLevel, this.now, 3);
+      this.layers.field.filt.frequency.setTargetAtTime(ev.values.fieldCutoff, this.now, 2);
+      this.pulsePres.gain.setTargetAtTime(ev.values.pulseLevel, this.now, 4);
+      this.layers.pulse.filt.frequency.setTargetAtTime(ev.values.pulseCutoff, this.now, 2);
+      const v = ev.values, t = this.now;
+      const P = this.layers.pad, D = this.layers.drone;
+      P.filt.frequency.setTargetAtTime(v.padCutoff, t, 1.5);
+      D.filt.frequency.setTargetAtTime(v.droneCutoff, t, 2);
+      this.verbSend.gain.setTargetAtTime(v.reverb, t, 1.5);
+      this.delaySend.gain.setTargetAtTime(v.delay, t, 1.5);
+      P.lfo.frequency.setTargetAtTime(v.lfoRate, t, 2);
+      D.lfo.frequency.setTargetAtTime(v.lfoRate * 0.6, t, 2);
+      P.lfoAmt.gain.setTargetAtTime(v.padCutoff * v.lfoDepth, t, 2);
+      D.lfoAmt.gain.setTargetAtTime(v.droneCutoff * v.lfoDepth * 0.7, t, 2);
+    }
+  }
+  level() {
+    if (!this.ctx) return -Infinity;
+    const a = new Float32Array(this.analyser.fftSize); this.analyser.getFloatTimeDomainData(a);
+    let s = 0; for (const x of a) s += x * x;
+    return 10 * Math.log10(s / a.length + 1e-12);
+  }
+  // ---- recorder: taps the master, keeps 16-bit PCM in chunks
+  startRec() {
+    if (!this.ctx) return false;
+    if (!this.proc) {
+      this.proc = this.ctx.createScriptProcessor(4096, 2, 2);
+      const sink = this.ctx.createGain(); sink.gain.value = 0;
+      this.master.connect(this.proc); this.proc.connect(sink); sink.connect(this.ctx.destination);
+      this.proc.onaudioprocess = e => {
+        const R = this.rec; if (!R) return;
+        const l = e.inputBuffer.getChannelData(0), r = e.inputBuffer.getChannelData(1), n = l.length;
+        const out = new Int16Array(n * 2);
+        for (let i = 0; i < n; i++) {
+          out[2 * i] = Math.max(-1, Math.min(1, l[i])) * 32767;
+          out[2 * i + 1] = Math.max(-1, Math.min(1, r[i])) * 32767;
+        }
+        R.chunks.push(out); R.frames += n;
+      };
+    }
+    this.rec = { chunks: [], frames: 0, t0: this.now, sampleRate: this.ctx.sampleRate };
+    return true;
+  }
+  stopRec() { const R = this.rec; this.rec = null; return R; }
+  get recording() { return !!this.rec; }
+  layerDb(id) {
+    if (!this.ctx) return -Infinity;
+    const an = this.layers[id].an, a = this._buf || (this._buf = new Float32Array(1024));
+    an.getFloatTimeDomainData(a);
+    let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * a[i];
+    return 10 * Math.log10(s / a.length + 1e-12);
+  }
+  voiceCount() { return this.ctx ? this.layers.pad.voices.length : 0; }
+}
+
+/* =========================================================
+   3 · FACE — UI. Reads the Brain, sends it commands.
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const LAYERS = [
+  { id: 'field',   name: 'Field',   color: '#9BC27A', def: 55 },
+  { id: 'drone',   name: 'Drone',   color: '#E8A84A', def: 70 },
+  { id: 'pad',     name: 'Pad',     color: '#C98BD9', def: 65 },
+  { id: 'texture', name: 'Texture', color: '#6FC3C0', def: 55 },
+  { id: 'melody',  name: 'Melody',  color: '#8FB8F0', def: 60 },
+  { id: 'pulse',   name: 'Pulse',   color: '#E07A6A', def: 60 }
+];
+const STRIP_ORDER = ['drone', 'pad', 'melody', 'texture', 'field', 'pulse'];
+const MACROS = [
+  ['density', 'Density', 'sparse · dense'],
+  ['light',   'Light',   'shadow · light'],
+  ['tension', 'Tension', 'rest · tense'],
+  ['space',   'Space',   'close · vast'],
+  ['motion',  'Motion',  'still · restless']
+];
+const MACRO_DEF = { density: 38, light: 62, tension: 35, space: 70, motion: 40 };
+
+// ---------- log + ticker
+const log = [], ticker = [];
+function note(cls, text) {
+  const line = `${fmt(brain.t)}  ${text}`;
+  log.push({ cls, line }); if (log.length > 80) log.shift();
+  const el = $('log');
+  el.innerHTML = log.map(l => `<span class="c-${l.cls}">${l.line}</span>`).join('\n');
+  el.scrollTop = el.scrollHeight;
+  ticker.push({ cls, line }); if (ticker.length > 3) ticker.shift();
+  $('ticker').innerHTML = ticker.map(l => `<span class="c-${l.cls}">${l.line}</span>`).join('');
+}
+
+// ---------- engine
+const body = new Body();
+body.masterLevel = 0.7;
+const ui = { field: '–', drone: '–', pad: '–' };
+const brain = new Brain(ev => {
+  body.handle(ev);
+  switch (ev.type) {
+    case 'harmony':
+      setWheel(ev.root, ev.key, ev.mode, ev.chord);
+      document.querySelectorAll('.pill').forEach(p => p.classList.toggle('on', p.dataset.s === ev.state));
+      $('secName').textContent = ev.section.toUpperCase();
+      note('brain', `BRAIN   ${ev.section} · ${ev.state} · ${ev.key} ${ev.mode}`);
+      break;
+    case 'chord':
+      if (ev.layer === 'texture') break;
+      if (ev.layer === 'pad') ui.pad = `${ev.name} · ${ev.notes.length} voices`;
+      if (ev.layer === 'drone') ui.drone = ev.name;
+      note(ev.layer, `${ev.layer.toUpperCase().padEnd(7)} ${ev.name} · ${ev.notes.map(n => midiName(n.midi)).join(' ')}`);
+      break;
+    case 'phrase':
+      note('melody', `MELODY  ${ev.notes.map(midiName).join(' ')}`);
+      break;
+    case 'listen':
+      note(ev.layer, `${ev.layer.toUpperCase().padEnd(7)} ${ev.text}`);
+      break;
+    case 'field': {
+      const parts = Object.entries(ev.mix).filter(([, v]) => v > 0.05).map(([k]) => k);
+      ui.field = parts.join(' + ') || 'silence';
+      note('field', `FIELD   ${ui.field}`);
+      break;
+    }
+    case 'gust':
+      note('field', `FIELD   gust ${ev.strength}`);
+      break;
+    case 'pulse-pattern':
+      if (brain.pulseOn) note('pulse', `PULSE   ${ev.text}`);
+      break;
+  }
+});
+
+// ---------- circle of fifths
+const FIFTHS = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
+const FIFTH_NAMES = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+const SVGNS = 'http://www.w3.org/2000/svg';
+const wheelSegs = [];
+(function buildWheel() {
+  const svg = $('wheel');
+  const P = (r, a) => { const rad = (a - 90) * Math.PI / 180; return `${(150 + r * Math.cos(rad)).toFixed(1)},${(150 + r * Math.sin(rad)).toFixed(1)}`; };
+  FIFTH_NAMES.forEach((nm, i) => {
+    const a0 = i * 30 - 14, a1 = i * 30 + 14, ro = 140, ri = 100;
+    const path = document.createElementNS(SVGNS, 'path');
+    path.setAttribute('d', `M${P(ro, a0)} A${ro},${ro} 0 0 1 ${P(ro, a1)} L${P(ri, a1)} A${ri},${ri} 0 0 0 ${P(ri, a0)} Z`);
+    path.setAttribute('stroke', '#0B0C10'); path.setAttribute('stroke-width', '3');
+    path.style.transition = 'fill .8s';
+    const rad = (i * 30 - 90) * Math.PI / 180;
+    const t = document.createElementNS(SVGNS, 'text');
+    t.setAttribute('x', (150 + 120 * Math.cos(rad)).toFixed(1)); t.setAttribute('y', (150 + 120 * Math.sin(rad)).toFixed(1));
+    t.setAttribute('font-size', '14'); t.setAttribute('font-family', 'Space Grotesk, sans-serif');
+    t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'middle');
+    t.textContent = nm;
+    svg.appendChild(path); svg.appendChild(t);
+    wheelSegs.push({ path, t });
+  });
+  const mk = (y, size, fill, fam, id) => {
+    const t = document.createElementNS(SVGNS, 'text');
+    t.setAttribute('x', '150'); t.setAttribute('y', y); t.setAttribute('font-size', size); t.setAttribute('fill', fill);
+    t.setAttribute('font-family', fam); t.setAttribute('text-anchor', 'middle'); t.id = id; svg.appendChild(t);
+  };
+  mk(140, 44, '#F4F1EA', 'Space Grotesk, sans-serif', 'wKey');
+  mk(168, 14, '#9A9AA3', 'Inter, sans-serif', 'wMode');
+  mk(190, 13, '#E8E6E1', 'JetBrains Mono, monospace', 'wChord');
+  setWheel(null, '–', 'press play', '');
+})();
+function setWheel(root, key, mode, chord) {
+  const idx = root === null ? -1 : FIFTHS.indexOf(root);
+  wheelSegs.forEach((s, i) => {
+    const d = idx < 0 ? 99 : Math.min((i - idx + 12) % 12, (idx - i + 12) % 12);
+    s.path.setAttribute('fill', d === 0 ? '#E8A84A' : d === 1 ? '#2E2A22' : '#16181F');
+    s.t.setAttribute('fill', d === 0 ? '#0B0C10' : d === 1 ? '#E8E6E1' : '#9A9AA3');
+  });
+  $('wKey').textContent = key;
+  $('wMode').textContent = mode ? mode[0].toUpperCase() + mode.slice(1) : '';
+  $('wChord').textContent = chord;
+}
+
+// ---------- knobs (double ring)
+const knobEls = {};
+(function buildKnobs() {
+  const box = $('knobs');
+  for (const [id, label, range] of MACROS) {
+    const w = document.createElement('div'); w.className = 'knob';
+    w.innerHTML = `
+      <svg viewBox="0 0 100 100" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="0" aria-valuemax="100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#1C1F27" stroke-width="3" stroke-dasharray="207.3 276.5" transform="rotate(135 50 50)"/>
+        <circle class="out" cx="50" cy="50" r="44" fill="none" stroke="#9A9AA3" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 276.5" transform="rotate(135 50 50)"/>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="#23262F" stroke-width="7" stroke-dasharray="160.2 213.6" transform="rotate(135 50 50)"/>
+        <circle class="in" cx="50" cy="50" r="34" fill="none" stroke="#E8A84A" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 213.6" transform="rotate(135 50 50)"/>
+        <text x="50" y="56" fill="#F4F1EA" font-size="17" font-family="JetBrains Mono, monospace" text-anchor="middle">0</text>
+      </svg>
+      <span class="lb">${label}</span><span class="rg">${range}</span>`;
+    box.appendChild(w);
+    const svg = w.querySelector('svg');
+    knobEls[id] = { svg, inner: w.querySelector('.in'), outer: w.querySelector('.out'), text: w.querySelector('text') };
+    const set = v => {
+      v = Math.round(clamp(v, 0, 100));
+      brain.macros[id] = v;
+      knobEls[id].inner.setAttribute('stroke-dasharray', `${(v / 100 * 160.2).toFixed(1)} 213.6`);
+      knobEls[id].text.textContent = v;
+      svg.setAttribute('aria-valuenow', v);
+    };
+    knobEls[id].set = set;
+    set(brain.macros[id]);
+    let drag = null;
+    svg.addEventListener('pointerdown', e => { drag = { y: e.clientY, v: brain.macros[id] }; svg.setPointerCapture(e.pointerId); svg.focus(); });
+    svg.addEventListener('pointermove', e => { if (drag) set(drag.v + (drag.y - e.clientY) * 0.5); });
+    svg.addEventListener('pointerup', () => { drag = null; });
+    svg.addEventListener('wheel', e => { e.preventDefault(); set(brain.macros[id] - e.deltaY * 0.05); }, { passive: false });
+    svg.addEventListener('dblclick', () => set(MACRO_DEF[id]));
+    svg.addEventListener('keydown', e => {
+      const step = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
+      if (step) { e.preventDefault(); set(brain.macros[id] + step); }
+    });
+  }
+})();
+
+// ---------- mixer strips
+const strip = {}, mix = {};
+const TIMBRES = [['glass', 'Glass'], ['rhodes', 'Soft Rhodes'], ['bell', 'Bell'], ['breath', 'Breath']];
+(function buildStrips() {
+  const box = $('strips');
+  for (const id of STRIP_ORDER) {
+    const L = LAYERS.find(l => l.id === id);
+    mix[id] = { level: L.def, mute: false, solo: false };
+    const el = document.createElement('div'); el.className = 'strip';
+    el.innerHTML = `
+      <span class="cb" style="background:${L.color}"></span>
+      <span class="nm">${L.name}</span>
+      <span class="st">–</span>
+      ${id === 'melody' ? `<select aria-label="Melody timbre">${TIMBRES.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select>` : ''}
+      <div class="body">
+        <div class="meter" aria-hidden="true"><i style="background:${L.color}"></i></div>
+        <input class="fader" type="range" min="0" max="100" value="${L.def}" aria-label="${L.name} level">
+      </div>
+      <div class="ms"><button type="button" aria-label="Mute ${L.name}" aria-pressed="false">M</button><button type="button" aria-label="Solo ${L.name}" aria-pressed="false">S</button></div>`;
+    box.appendChild(el);
+    const [mb, sb] = el.querySelectorAll('.ms button');
+    strip[id] = { el, st: el.querySelector('.st'), meter: el.querySelector('.meter i'), mb, sb, lv: 0 };
+    el.querySelector('.fader').addEventListener('input', e => { mix[id].level = +e.target.value; applyMix(); });
+    mb.addEventListener('click', () => { mix[id].mute = !mix[id].mute; applyMix(); });
+    sb.addEventListener('click', () => { mix[id].solo = !mix[id].solo; applyMix(); });
+    if (id === 'melody') el.querySelector('select').addEventListener('change', e => { body.timbre = e.target.value; });
+  }
+})();
+function gainOf(id) {
+  const anySolo = Object.values(mix).some(m => m.solo);
+  const m = mix[id];
+  if (m.mute || (anySolo && !m.solo)) return 0;
+  return m.level / 100;
+}
+function applyMix() {
+  for (const id of STRIP_ORDER) {
+    body.setLayer(id, gainOf(id));
+    strip[id].mb.classList.toggle('mu', mix[id].mute); strip[id].mb.setAttribute('aria-pressed', mix[id].mute);
+    strip[id].sb.classList.toggle('so', mix[id].solo); strip[id].sb.setAttribute('aria-pressed', mix[id].solo);
+  }
+}
+function setText(el, t) { if (el.textContent !== t) el.textContent = t; }
+function updateStrips(speaking) {
+  const tim = (TIMBRES.find(t => t[0] === (body.timbre || 'glass')) || TIMBRES[0])[1];
+  setText(strip.drone.st, ui.drone);
+  setText(strip.pad.st, ui.pad);
+  setText(strip.melody.st, `${tim} · ${speaking ? 'speaking' : 'silent'}`);
+  setText(strip.texture.st, speaking ? 'thin · listening' : 'full · listening');
+  setText(strip.field.st, ui.field);
+  setText(strip.pulse.st, brain.pulseOn ? `${brain.bpm} bpm` : 'waits for the arc');
+  strip.pulse.el.style.opacity = brain.pulseOn || !playing ? 1 : 0.55;
+}
+
+// ---------- the living arc (streamgraph)
+const BINS = 280;
+let hist = {};
+let lastBin = -1;
+function clearHist() { hist = {}; for (const L of LAYERS) hist[L.id] = new Float32Array(BINS).fill(-1); lastBin = -1; }
+clearHist();
+const levels = {}; for (const L of LAYERS) levels[L.id] = 0;
+
+function forecast(id, x) {
+  const I = arcIntensity(brain.shape, x), e = brain.effective(I), sec = sectionAt(x);
+  let v;
+  switch (id) {
+    case 'drone':   v = 0.62; break;
+    case 'pad':     v = 0.35 + 0.45 * e.density; break;
+    case 'melody':  v = 0.08 + 0.55 * e.density * Math.pow(Math.max(0, Math.sin(x * 60 + 1)), 6); break;
+    case 'texture': v = 0.15 + 0.6 * e.density * (0.7 + 0.3 * Math.sin(x * 23)); break;
+    case 'field':   v = 0.9 * (0.25 + 0.65 * e.space) * (1 - 0.45 * I); break;
+    case 'pulse':   v = sec.name === 'Emergence' ? 0 : 0.8 * clamp((I - 0.3) * 2.5) * (sec.name === 'Return' ? 0.6 : 1); break;
+  }
+  return v * gainOf(id) / ((LAYERS.find(l => l.id === id).def) / 100);   // relative to the default mix
+}
+function recordLevels() {
+  for (const L of LAYERS) {
+    const db = body.layerDb(L.id);
+    const target = isFinite(db) ? clamp((db + 64) / 42) : 0;
+    levels[L.id] += (target - levels[L.id]) * (target > levels[L.id] ? 0.25 : 0.04);
+    strip[L.id].meter.style.height = (levels[L.id] * 100).toFixed(0) + '%';
+  }
+  if (!playing) return;
+  const pos = (brain.t % brain.length) / brain.length;
+  const bin = Math.min(BINS - 1, Math.floor(pos * BINS));
+  if (lastBin >= 0 && bin < lastBin && lastBin - bin > BINS / 2) clearHist();   // new cycle of the arc
+  const from = (lastBin >= 0 && bin > lastBin && bin - lastBin < 6) ? lastBin + 1 : bin;
+  for (let b = from; b <= bin; b++) for (const L of LAYERS) {
+    const h = hist[L.id];
+    h[b] = h[b] < 0 ? levels[L.id] : h[b] * 0.85 + levels[L.id] * 0.15;
+  }
+  lastBin = bin;
+}
+function drawArc() {
+  const c = $('arc'), dpr = window.devicePixelRatio || 1;
+  const W = c.clientWidth, Hc = c.clientHeight;
+  if (c.width !== Math.round(W * dpr) || c.height !== Math.round(Hc * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(Hc * dpr); }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, Hc);
+  const H = Hc - 26, mid = H / 2, maxPx = H * 0.22;
+  const pos = (brain.t % brain.length) / brain.length;
+  const pbin = Math.floor(pos * BINS);
+
+  // thickness per bin
+  const th = LAYERS.map(() => new Float32Array(BINS + 1));
+  for (let b = 0; b <= BINS; b++) {
+    const bb = Math.min(BINS - 1, b), x = b / BINS;
+    let tot = 0;
+    LAYERS.forEach((L, j) => {
+      const h = hist[L.id][bb];
+      const v = (bb <= pbin && h >= 0) ? h : forecast(L.id, x);
+      th[j][b] = Math.max(0.6, v * maxPx); tot += th[j][b];
+    });
+    if (tot > H * 0.94) { const k = H * 0.94 / tot; LAYERS.forEach((_, j) => th[j][b] *= k); }
+  }
+  // stack, centred
+  let base = new Float32Array(BINS + 1);
+  for (let b = 0; b <= BINS; b++) { let tot = 0; LAYERS.forEach((_, j) => tot += th[j][b]); base[b] = mid - tot / 2; }
+  LAYERS.forEach((L, j) => {
+    g.beginPath();
+    for (let b = 0; b <= BINS; b++) { const x = b / BINS * W; b ? g.lineTo(x, base[b]) : g.moveTo(x, base[b]); }
+    for (let b = BINS; b >= 0; b--) g.lineTo(b / BINS * W, base[b] + th[j][b]);
+    g.closePath(); g.fillStyle = L.color; g.globalAlpha = 0.8; g.fill(); g.globalAlpha = 1;
+    for (let b = 0; b <= BINS; b++) base[b] += th[j][b];
+  });
+  // veil over the future
+  const px = pos * W;
+  g.fillStyle = 'rgba(16,18,24,0.6)'; g.fillRect(px, 0, W - px, H);
+  // sections
+  const cur = sectionAt(pos);
+  g.font = '11px Inter, sans-serif';
+  for (const s of SECTIONS) {
+    const x0 = s.from * W;
+    if (s.from > 0) { g.strokeStyle = '#2A2D37'; g.setLineDash([3, 6]); g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0, H); g.stroke(); g.setLineDash([]); }
+    g.fillStyle = s === cur ? '#F4F1EA' : '#9A9AA3';
+    g.fillText(s.name.toUpperCase(), x0 + 4, Hc - 8);
+  }
+  // playhead + tag
+  g.strokeStyle = '#F4F1EA'; g.lineWidth = 2; g.beginPath(); g.moveTo(px, 0); g.lineTo(px, H); g.stroke();
+  const tag = `${fmt(brain.t % brain.length)} · ${brain.hstate}`;
+  g.font = '12px JetBrains Mono, monospace';
+  const tw = g.measureText(tag).width + 14, tx = Math.min(px + 8, W - tw - 2);
+  g.fillStyle = '#F4F1EA'; g.beginPath(); g.roundRect ? g.roundRect(tx, 10, tw, 22, 4) : g.rect(tx, 10, tw, 22); g.fill();
+  g.fillStyle = '#0B0C10'; g.fillText(tag, tx + 7, 25);
+}
+
+// ---------- transport
+let playing = false, last = 0, speed = 1;
+$('play').addEventListener('click', async () => {
+  if (!playing) {
+    try { await body.start(); } catch (err) { note('brain', 'Audio could not start: ' + err.message); return; }
+    playing = true; last = performance.now();
+    brain.nextChordAt = brain.t; brain.droneRoot = null; brain.fieldSection = null;
+    if (brain.t === 0) brain.padVoices = [];
+    applyMix();
+    $('play').textContent = '■'; $('play').classList.add('on'); $('play').setAttribute('aria-label', 'Stop');
+  } else {
+    playing = false; body.stop();
+    $('play').textContent = '▶'; $('play').classList.remove('on'); $('play').setAttribute('aria-label', 'Play');
+  }
+});
+function restart() {
+  brain.reset($('seed').value.trim() || 'S33');
+  clearHist();
+  ui.field = ui.drone = ui.pad = '–';
+  if (playing) { body.stop(); body.start().then(applyMix); }
+  log.length = 0; ticker.length = 0;
+  note('brain', `BRAIN   restart · seed ${brain.seed}`);
+}
+$('restart').addEventListener('click', restart);
+$('seed').addEventListener('change', restart);
+$('newseed').addEventListener('click', () => {
+  const words = ['ORION', 'VEGA', 'LYRA', 'NOVA', 'TIDE', 'AURA', 'DUNE', 'HALO', 'DRIFT', 'ECHO'];
+  $('seed').value = String(1000 + Math.floor(Math.random() * 9000)) + '-' + words[Math.floor(Math.random() * words.length)];
+  restart();
+});
+$('shape').addEventListener('change', e => { brain.shape = e.target.value; $('shapeName').textContent = e.target.value.toUpperCase(); });
+$('length').addEventListener('change', e => {
+  const x = (brain.t % brain.length) / brain.length;
+  brain.length = +e.target.value; brain.t = x * brain.length; brain.nextChordAt = brain.t + 2;
+});
+$('speed').addEventListener('change', e => { speed = +e.target.value; });
+$('arc').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  brain.t = clamp((e.clientX - r.left) / r.width) * brain.length; brain.nextChordAt = brain.t + 1;
+  lastBin = -1;
+});
+
+// ---------- main loop
+function frame(now) {
+  const dt = Math.min(0.25, (now - last) / 1000); last = now;
+  if (playing) brain.tick(dt, speed);
+  const e = brain.effective();
+  for (const [id] of MACROS) knobEls[id].outer.setAttribute('stroke-dasharray', `${(e[id] * 207.3).toFixed(1)} 276.5`);
+  setText($('intens'), (e.I * 100).toFixed(0) + '%');
+  setText($('clock'), fmt(brain.t % brain.length) + ' / ' + fmt(brain.length));
+  setText($('nextc'), playing ? Math.max(0, (brain.nextChordAt - brain.t) / speed).toFixed(0) + ' s' : '–');
+  const db = body.level(); setText($('meter'), isFinite(db) && db > -90 ? db.toFixed(1) + ' dB' : '−∞ dB');
+  recordLevels();
+  updateStrips(brain.t < brain.melSpeakUntil);
+  drawArc();
+  requestAnimationFrame(frame);
+}
+last = performance.now();
+requestAnimationFrame(frame);
+note('brain', 'ECLIPTIC ready · press ▶ · tip: Time 10× plays a whole arc in 2 minutes');
+
+/* =========================================================
+   4 · TAKES & SESSIONS — recording (WAV + MIDI) and saved sessions
+   ========================================================= */
+
+// ---------- saving files: the artifact's download capability, or a plain download elsewhere
+const inArtifact = !!(window.claude && window.claude.use);
+const dlReady = inArtifact ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+async function offerFile(filename, blob) {
+  const dl = await dlReady;
+  if (dl) {
+    try { await dl.save({ filename, data: blob }); return 'Saved.'; }
+    catch (e) {
+      if (e && e.code === 'declined') return 'Not saved.';
+      if (e && e.code === 'rate_limited') return 'Another save is open — try again in a moment.';
+      return 'Saving is not available here' + (e && e.code ? ` (${e.code})` : '') + '.';
+    }
+  }
+  if (inArtifact) return 'Saving files is not available in this view.';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  return 'Saved to your downloads.';
+}
+
+// ---------- CRC32 + ZIP (store, no compression)
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crcParts(parts) {
+  let c = 0xFFFFFFFF;
+  for (const p of parts) for (let i = 0; i < p.length; i++) c = CRC_T[(c ^ p[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function makeZip(files) { // files: [{name, parts: Uint8Array[]}]
+  const enc = new TextEncoder(), out = [], central = [];
+  const d = new Date();
+  const dtime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const ddate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const size = f.parts.reduce((s, p) => s + p.length, 0), crc = crcParts(f.parts);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dtime, true); lh.setUint16(12, ddate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, size, true); lh.setUint32(22, size, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    out.push(new Uint8Array(lh.buffer), name, ...f.parts);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+    ch.setUint16(10, 0, true); ch.setUint16(12, dtime, true); ch.setUint16(14, ddate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, size, true); ch.setUint32(24, size, true); ch.setUint16(28, name.length, true);
+    ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + size;
+  }
+  const cdSize = central.reduce((s, p) => s + p.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...out, ...central, new Uint8Array(end.buffer)], { type: 'application/zip' });
+}
+
+// ---------- WAV (16-bit stereo)
+function wavParts(rec) {
+  const dataBytes = rec.frames * 4;
+  const h = new DataView(new ArrayBuffer(44));
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) h.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); h.setUint32(4, 36 + dataBytes, true); w(8, 'WAVE'); w(12, 'fmt ');
+  h.setUint32(16, 16, true); h.setUint16(20, 1, true); h.setUint16(22, 2, true); h.setUint32(24, rec.sampleRate, true);
+  h.setUint32(28, rec.sampleRate * 4, true); h.setUint16(32, 4, true); h.setUint16(34, 16, true);
+  w(36, 'data'); h.setUint32(40, dataBytes, true);
+  return [new Uint8Array(h.buffer), ...rec.chunks.map(c => new Uint8Array(c.buffer))];
+}
+
+// ---------- MIDI capture + Standard MIDI File (type 1)
+const MIDI_TRACKS = [
+  { key: 'drone',   name: 'Drone',        ch: 0 },
+  { key: 'pad',     name: 'Pad',          ch: 1 },
+  { key: 'melody',  name: 'Melody',       ch: 2 },
+  { key: 'texture', name: 'Texture source', ch: 3 },
+  { key: 'wood',    name: 'Pulse wood',   ch: 4 },
+  { key: 'drums',   name: 'Pulse drums',  ch: 9 }
+];
+let midiRec = null;
+const v127 = v => Math.max(1, Math.min(127, Math.round(v * 127)));
+function midiOpen(layer, notes, t) {
+  midiRec.open[layer] = notes.map(n => { const o = { track: layer, note: n.midi, vel: v127(n.vel), on: t, off: null }; midiRec.notes.push(o); return o; });
+}
+function midiClose(layer, t) { for (const o of midiRec.open[layer] || []) o.off = t; midiRec.open[layer] = []; }
+function captureEvent(ev) {
+  if (!midiRec || !body.recording) return;
+  const t = body.now - midiRec.t0;
+  if (ev.type === 'chord') { midiClose(ev.layer, t); midiOpen(ev.layer, ev.notes, t); }
+  else if (ev.type === 'note' && ev.layer === 'melody') midiRec.notes.push({ track: 'melody', note: ev.midi, vel: v127(ev.vel), on: t, off: t + ev.dur });
+  else if (ev.type === 'note' && ev.layer === 'pulse') {
+    const tt = t + (ev.in || 0);
+    midiRec.notes.push({ track: ev.voice === 'wood' ? 'wood' : 'drums', note: ev.midi, vel: v127(ev.vel), on: tt, off: tt + 0.12 });
+  }
+}
+brain.emit = (orig => ev => { orig(ev); captureEvent(ev); })(brain.emit);
+
+function buildMidi(rec) {
+  const PPQ = 480, bpm = rec.bpm, tps = PPQ * bpm / 60;
+  const vlq = n => { const b = [n & 0x7F]; while ((n >>= 7)) b.unshift((n & 0x7F) | 0x80); return b; };
+  const str = s => [...new TextEncoder().encode(s)];
+  const chunk = (id, bytes) => [...str(id), (bytes.length >>> 24) & 255, (bytes.length >>> 16) & 255, (bytes.length >>> 8) & 255, bytes.length & 255, ...bytes];
+  const meta = (type, data) => [0xFF, type, ...vlq(data.length), ...data];
+  const tracks = [];
+  const usPerQ = Math.round(60000000 / bpm);
+  tracks.push(chunk('MTrk', [0, ...meta(0x03, str('S33 Ecliptic')), 0, ...meta(0x51, [(usPerQ >> 16) & 255, (usPerQ >> 8) & 255, usPerQ & 255]),
+                             0, ...meta(0x58, [4, 2, 24, 8]), 0, 0xFF, 0x2F, 0]));
+  for (const T of MIDI_TRACKS) {
+    const evs = [];
+    for (const n of rec.notes) if (n.track === T.key) {
+      const on = Math.round(n.on * tps), off = Math.max(on + 1, Math.round(n.off * tps));
+      evs.push([on, 1, 0x90 | T.ch, n.note, n.vel], [off, 0, 0x80 | T.ch, n.note, 0]);
+    }
+    if (!evs.length) continue;
+    evs.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const bytes = [0, ...meta(0x03, str(T.name))];
+    let last = 0;
+    for (const e of evs) { bytes.push(...vlq(e[0] - last), e[2], e[3], e[4]); last = e[0]; }
+    bytes.push(0, 0xFF, 0x2F, 0);
+    tracks.push(chunk('MTrk', bytes));
+  }
+  const head = chunk('MThd', [0, 1, 0, tracks.length, (PPQ >> 8) & 255, PPQ & 255]);
+  return new Uint8Array([...head, ...tracks.flat()]);
+}
+
+// ---------- sessions
+const SESS_KEY = 's33-ambient-sessions';
+function readStore() { try { return JSON.parse(localStorage.getItem(SESS_KEY) || '[]'); } catch (e) { return null; } }
+function writeStore(list) { try { localStorage.setItem(SESS_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
+function snapshot(name) {
+  const mixCopy = {}; for (const id in mix) mixCopy[id] = { ...mix[id] };
+  return {
+    app: 'S33 Ecliptic', v: 1, name: name || brain.seed, savedAt: new Date().toISOString(),
+    seed: brain.seed, shape: brain.shape, length: brain.length, speed,
+    macros: { ...brain.macros }, mix: mixCopy, timbre: body.timbre || 'glass',
+    position: +(brain.t % brain.length).toFixed(1)
+  };
+}
+function applySession(s) {
+  if (!s || !['S33 Ecliptic', 'S33 Ambient Machine'].includes(s.app)) throw new Error('not an S33 Ecliptic session');
+  $('seed').value = s.seed;
+  brain.shape = s.shape; $('shape').value = s.shape; $('shapeName').textContent = s.shape.toUpperCase();
+  brain.length = s.length; $('length').value = String(s.length);
+  speed = s.speed || 1; $('speed').value = String(speed);
+  restart();
+  for (const [id] of MACROS) if (s.macros && s.macros[id] !== undefined) knobEls[id].set(s.macros[id]);
+  for (const id of STRIP_ORDER) if (s.mix && s.mix[id]) {
+    Object.assign(mix[id], s.mix[id]);
+    strip[id].el.querySelector('.fader').value = mix[id].level;
+  }
+  applyMix();
+  body.timbre = s.timbre || 'glass';
+  const tsel = strip.melody.el.querySelector('select'); if (tsel) tsel.value = body.timbre;
+  if (s.position > 0) { brain.t = s.position; brain.nextChordAt = brain.t; lastBin = -1; }
+  note('brain', `BRAIN   session “${s.name}” loaded`);
+}
+function renderSessions() {
+  const list = readStore(), ul = $('sessList');
+  ul.innerHTML = '';
+  if (list === null) { $('sessMsg').textContent = 'This browser does not keep sessions here — use Export .json instead.'; return; }
+  if (!list.length) { $('sessMsg').textContent = 'No sessions saved yet.'; return; }
+  $('sessMsg').textContent = '';
+  list.slice().reverse().forEach(s => {
+    const li = document.createElement('li');
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const b = document.createElement('b'); b.textContent = s.name;
+    const sp = document.createElement('span'); sp.textContent = `${s.seed} · ${s.shape} · ${Math.round(s.length / 60)} min · ${fmt(s.position)}`;
+    meta.append(b, sp);
+    const load = document.createElement('button'); load.type = 'button'; load.textContent = 'Load';
+    load.addEventListener('click', () => { try { applySession(s); $('sessMsg').textContent = `Loaded “${s.name}”.`; } catch (e) { $('sessMsg').textContent = e.message; } });
+    const del = document.createElement('button'); del.type = 'button'; del.textContent = 'Delete'; del.setAttribute('aria-label', `Delete ${s.name}`);
+    del.addEventListener('click', () => { writeStore((readStore() || []).filter(x => x.savedAt !== s.savedAt)); renderSessions(); });
+    li.append(meta, load, del); ul.appendChild(li);
+  });
+}
+$('sessBtn').addEventListener('click', () => {
+  const p = $('sessPanel'); p.hidden = !p.hidden; $('sessBtn').setAttribute('aria-expanded', String(!p.hidden));
+  if (!p.hidden) { renderSessions(); if (!$('sessName').value) $('sessName').value = brain.seed; }
+});
+$('sessSave').addEventListener('click', () => {
+  const list = readStore();
+  if (list === null) { $('sessMsg').textContent = 'This browser does not keep sessions here — use Export .json instead.'; return; }
+  list.push(snapshot($('sessName').value.trim()));
+  $('sessMsg').textContent = writeStore(list) ? 'Saved.' : 'Could not save here — use Export .json instead.';
+  renderSessions();
+});
+$('sessExport').addEventListener('click', async () => {
+  const s = snapshot($('sessName').value.trim());
+  const safe = (s.name || 'session').replace(/[^\w\-]+/g, '_').slice(0, 60);
+  $('sessMsg').textContent = await offerFile(`S33-Ecliptic_${safe}.json`, new Blob([JSON.stringify(s, null, 2)], { type: 'application/json' }));
+});
+$('sessImport').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const s = JSON.parse(await f.text()); applySession(s); $('sessMsg').textContent = `Imported “${s.name}”.`; }
+  catch (err) { $('sessMsg').textContent = 'Could not read that file: ' + err.message; }
+  e.target.value = '';
+});
+
+// ---------- recording
+let take = null, recTimer = null;
+function setRecUI(on) {
+  const b = $('recBtn');
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
+  if (!on) { b.textContent = '● Rec'; clearInterval(recTimer); recTimer = null; return; }
+  const tick = () => { if (body.recording) b.textContent = '● ' + fmt(body.now - midiRec.t0); };
+  tick(); recTimer = setInterval(tick, 500);
+}
+function startRec() {
+  if (!body.startRec()) return;
+  midiRec = { t0: body.rec.t0, bpm: brain.bpm, notes: [], open: {} };
+  // what is already sounding when we press Rec
+  if (brain.padVoices.length) midiOpen('pad', brain.padVoices.map(m => ({ midi: m, vel: 0.6 })), 0);
+  if (brain.droneRoot !== null) { let low = 36 + brain.droneRoot; if (low > 43) low -= 12; midiOpen('drone', [{ midi: low, vel: 0.8 }, { midi: low + 7, vel: 0.8 }], 0); }
+  $('take').hidden = true; take = null;
+  setRecUI(true);
+  note('brain', 'REC     recording audio + MIDI');
+}
+function finishRec() {
+  const rec = body.stopRec(); if (!rec) return;
+  const end = rec.frames / rec.sampleRate;
+  for (const k in midiRec.open) midiClose(k, end);
+  setRecUI(false);
+  take = { rec, midi: { bpm: midiRec.bpm, notes: midiRec.notes }, session: snapshot(), seconds: end };
+  midiRec = null;
+  const mb = (rec.frames * 4 / 1048576).toFixed(1);
+  $('takeTitle').textContent = `Take ready · ${fmt(end)}`;
+  $('takeInfo').textContent = `audio.wav (${mb} MB, 16-bit stereo) · layers.mid (${take.midi.notes.length} notes, ${take.midi.bpm} bpm grid) · session.json`;
+  $('takeMsg').textContent = '';
+  $('take').hidden = false;
+  note('brain', `REC     take ready · ${fmt(end)}`);
+}
+$('recBtn').addEventListener('click', async () => {
+  if (body.recording) { finishRec(); return; }
+  if (!playing) { $('play').click(); await new Promise(r => setTimeout(r, 300)); }
+  if (playing) startRec();
+});
+// stopping playback ends the take too
+$('play').addEventListener('click', () => { if (!playing && body.recording) finishRec(); });
+$('takeSave').addEventListener('click', async () => {
+  if (!take) return;
+  $('takeMsg').textContent = 'Packing…';
+  await new Promise(r => setTimeout(r, 30));
+  const enc = new TextEncoder();
+  const d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
+  const base = `S33-Ecliptic_${take.session.seed}_${stamp}`;
+  if (!inArtifact) {   // installed app / local: three separate files, no zip
+    await offerFile(`${base}_audio.wav`, new Blob(wavParts(take.rec), { type: 'audio/wav' }));
+    await offerFile(`${base}_layers.mid`, new Blob([buildMidi(take.midi)], { type: 'audio/midi' }));
+    $('takeMsg').textContent = await offerFile(`${base}_session.json`, new Blob([JSON.stringify(take.session, null, 2)], { type: 'application/json' }));
+    return;
+  }
+  const zip = makeZip([
+    { name: 'audio.wav', parts: wavParts(take.rec) },
+    { name: 'layers.mid', parts: [buildMidi(take.midi)] },
+    { name: 'session.json', parts: [enc.encode(JSON.stringify(take.session, null, 2))] }
+  ]);
+  $('takeMsg').textContent = await offerFile(`${base}.zip`, zip);
+});
+$('takeSave').textContent = inArtifact ? 'Save take (.zip)' : 'Save take (WAV + MIDI)';
+// installable app: offline cache (not inside the Claude page, where service workers are off)
+if ('serviceWorker' in navigator && !inArtifact && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+$('takeDrop').addEventListener('click', () => { take = null; $('take').hidden = true; });
+</script>
+</body>
+</html>
