@@ -190,6 +190,7 @@
       <span>OUT <b id="meter">−∞ dB</b></span>
       <span>Next chord <b id="nextc">–</b></span>
       <span class="size" role="group" aria-label="Interface size">SIZE <button type="button" id="zMinus" aria-label="Smaller">−</button><button type="button" id="zAuto" class="on" aria-label="Fit the window">auto</button><button type="button" id="zPlus" aria-label="Larger">+</button></span>
+      <span>Ritmica <b id="linkRit">off</b></span>
       <span>Mother Board: off</span>
     </div>
   </footer>
@@ -1641,6 +1642,64 @@ if ('serviceWorker' in navigator && !inArtifact && location.protocol !== 'file:'
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 $('takeDrop').addEventListener('click', () => { take = null; $('take').hidden = true; });
+
+/* =========================================================
+   5 · LINK — talks to S33 Ritmica when it is open on the same site.
+   Ecliptic sends key, mode, chord and the arc's call for a pulse;
+   Ritmica answers with its state and its kicks.
+   ========================================================= */
+const link = { chan: null, rhythm: 'idle', seenAt: 0, was: false };
+try { link.chan = new BroadcastChannel('s33-link'); } catch (e) {}
+function linkPost(m) { try { if (link.chan) link.chan.postMessage(Object.assign({ from: 'ecliptic' }, m)); } catch (e) {} }
+function linkState(type) {
+  return { type, playing, root: brain.root, mode: brain.mode, chord: brain.chordPcs.slice(), chordName: brain.chordName,
+           section: sectionAt((brain.t % brain.length) / brain.length).name, intensity: +brain.intensity().toFixed(3),
+           pulseOn: brain.pulseOn, bpm: brain.bpm };
+}
+const peerSeen = () => link.seenAt > 0 && performance.now() - link.seenAt < 10000;
+const rhythmOn = () => link.rhythm !== 'idle' && peerSeen();
+// while Ritmica plays, Ecliptic's own Pulse steps aside
+brain.emit = (orig => ev => {
+  if (ev.type === 'param' && rhythmOn()) ev.values.pulseLevel = 0;
+  orig(ev);
+  if (ev.type === 'harmony') linkPost(linkState('harmony'));
+  if (ev.type === 'listen' && ev.layer === 'pulse') linkPost({ type: brain.pulseOn ? 'engage' : 'release' });
+})(brain.emit);
+// pads, drone and texture breathe on Ritmica's kick
+function linkDuck(vel, inSec) {
+  if (!body.ctx || !body.running) return;
+  if (!body.duck) {
+    body.duck = ['pad', 'drone', 'texture'].map(id => {
+      const L = body.layers[id], g = body.ctx.createGain();
+      L.filt.disconnect(L.gain); L.filt.connect(g); g.connect(L.gain);
+      return g;
+    });
+  }
+  const t = body.now + Math.max(0, Math.min(0.5, inSec || 0)), d = 0.28 * clamp(vel || 1);
+  for (const g of body.duck) {
+    g.gain.cancelScheduledValues(t);
+    g.gain.setTargetAtTime(1 - d, t, 0.012);
+    g.gain.setTargetAtTime(1, t + 0.07, 0.14);
+  }
+}
+function linkRefresh() {
+  const on = rhythmOn();
+  if (on !== link.was) { link.was = on; note('pulse', on ? 'RITMICA enters · Pulse steps aside' : 'RITMICA leaves · Pulse is free again'); }
+  setText($('linkRit'), on ? link.rhythm : (peerSeen() ? 'linked' : 'off'));
+}
+if (link.chan) {
+  link.chan.onmessage = ev => {
+    const m = ev.data || {}; if (m.from !== 'ritmica') return;
+    link.seenAt = performance.now();
+    if (m.type === 'hello') linkPost(linkState('state'));
+    else if (m.type === 'rhythm-state') link.rhythm = m.state || 'idle';
+    else if (m.type === 'kick') linkDuck(m.vel, m.in);
+    linkRefresh();
+  };
+  setInterval(() => { linkPost(linkState('state')); linkRefresh(); }, 2000);
+  $('play').addEventListener('click', () => setTimeout(() => linkPost(linkState('state')), 60));
+  $('restart').addEventListener('click', () => setTimeout(() => linkPost(linkState('state')), 60));
+}
 </script>
 </body>
 </html>
